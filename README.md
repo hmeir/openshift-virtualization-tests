@@ -200,17 +200,9 @@ Here, no ocp upgrade is needed (e.g. 4.y.z-1 -> 4.y.z).
 
 ##### EUS Upgrade:
 EUS-to-EUS updates are only viable between even-numbered minor versions of OpenShift Container Platform.
-Here, the comma separated list of two ocp images for EUS upgrade from 4.y.z->4.y+2.0 needs to be provided via command line parameter --eus-ocp-images. Test would determine the correct CNV upgrade path based on the current CNV version (4.y.z) and possible target cnv version (4.y+2.0)
 
-Before running upgrade tests, it must be understood if a direct upgrade path exists between the source and target version. This can be done by using cnv version explorer tool.
-
-Sample output for target version 4.10.1 using this tool:
-
-```bash
-{"targetVersion": "v4.10.1", "path": [{"startVersion": "v4.9.2", "versions": ["v4.10.0", "v4.10.1"]}, {"startVersion": "v4.9.3", "versions": ["v4.10.0", "v4.10.1"]}, {"startVersion": "v4.9.4", "versions": ["v4.10.0", "v4.10.1"]}, {"startVersion": "v4.9.5", "versions": ["v4.10.0", "v4.10.1"]}]}
-```
-
-Here it shows the upgrade paths for various starting versions.
+You must provide --eus-ocp-images via cli, which is two comma separated ocp images for EUS upgrade.
+The default target cnv version will be 4.Y+2.0. Optionally, --eus-csv-target-version can be provided for 4.Y+2.z version.
 
 #### OCP upgrade
 
@@ -259,7 +251,7 @@ To upgrade to cnv 4.y.0, using the cnv image that has been shipped, following co
 Command to run entire upgrade test suite for EUS upgrade, including pre and post upgrade validation:
 
 ```bash
---upgrade eus --eus-ocp-images <ocp_image_version_4.y+1.z>,<ocp_image_version_4.y+2.z>
+--upgrade eus --eus-ocp-images <ocp_image_version_4.y+1.z>,<ocp_image_version_4.y+2.z> --eus-cnv-target-version <4.Y+2.z|None>
 ```
 #### Custom upgrade lanes
 
@@ -313,14 +305,13 @@ You can run a test using a subset of a simple matrix (i.e flat list), example:
 ```
 
 To run a test using a subset of a complex matrix (e.g list of dicts), you'll also need to add
-the following to tests/conftest.py
+the following to `openshift-virtualization-tests/conftest.py`
 
-- Add parser.addoption under pytest_addoption (the name must end with \_matrix)
+- Add `parser.addoption` under `pytest_addoption` (the name must end with `_matrix`)
 
-Multiple keys can be selected by passing them with ','
+Multiple keys can be selected by passing them with `,`
 
-Available storage classes can be found in `global_config.py`
-under storage_class_matrix dictionary.
+Available storage classes can be found in `global_config.py` under `storage_class_matrix` dictionary.
 
 Example:
 
@@ -434,7 +425,7 @@ export IMAGE_TAG=<the image tag to use>              # default "latest"
 ### Running containerized tests examples
 
 For running tests you need to have access to artifactory server with images.
-Environment variables ARTIFACTORY_USER and ARTIFACTORY_TOKEN expected to be set up for local runs.
+Environment variables `ARTIFACTORY_USER` and `ARTIFACTORY_TOKEN` expected to be set up for local runs.
 For these credentials, please contact devops QE focal point via cnv-qe slack channel.
 
 Also need to create the folder which should contain `kubeconfig`, binaries `oc`, `virtctl` and **ssh key** for access
@@ -539,25 +530,7 @@ To check for PEP 8 issues locally run:
 tox
 ```
 
-### Run functional tests locally
-
-It is possible to run functional tests on local 2-node Kubernetes environment.
-This is not a targeted setup for users, but these tests may help you during the
-development before proper verification described in the following section.
-
-Run tests locally:
-
-```bash
-UPSTREAM=1 make cluster-up tests
-```
-
-Remove the cluster:
-
-```bash
-make cluster-down
-```
-
-### Run functional tests via Jenkins job
+### Run the tests via Jenkins job
 
 #### Build and push a container with your changes
 
@@ -605,16 +578,18 @@ docs/build/html/index.html
 
 ##### unprivileged_client
 
-To skip 'unprivileged_client' creation pass to pytest command:
+To skip `unprivileged_client` creation pass to pytest command:
+```bash
 --tc=no_unprivileged_client:True
+```
 
 #### Run command on nodes
 
-ExecCommandOnPod is used to run command on nodes
+`ExecCommandOnPod` is used to run command on nodes
 
 ##### Example
 
-workers_utility_pods and masters_utility_pods are fixtures that hold the pods.
+`workers_utility_pods` and `masters_utility_pods` are fixtures that hold the pods.
 
 ```python
 pod_exec = ExecCommandOnPod(utility_pods=workers_utility_pods, node=node)
