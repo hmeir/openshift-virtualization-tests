@@ -547,5 +547,5 @@ def vm_object_from_template(
     )
 
 
-def get_hco_version_name(cnv_target_version):
+def get_hco_version_name(cnv_target_version: str) -> str:
     return f"kubevirt-hyperconverged-operator.v{cnv_target_version}"

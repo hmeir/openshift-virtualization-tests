@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import json
 import logging
 import re
 from pprint import pformat
 from threading import Thread
-from typing import Dict, List
+from typing import Any
 
 from deepdiff import DeepDiff
 from kubernetes.dynamic import DynamicClient
@@ -559,19 +561,21 @@ def wait_for_pending_alerts_to_fire(pending_alerts, prometheus):
         LOGGER.error(f"Out of {pending_alerts}, following alerts did not get to {FIRING_STATE}: {_pending_alerts}")
 
 
-def get_upgrade_path(target_version: str) -> dict:
+def get_upgrade_path(target_version: str) -> dict[str, Any]:
     return wait_for_version_explorer_response(
         api_end_point="GetUpgradePath", query_string=f"targetVersion={target_version}"
     )
 
 
-def get_shortest_upgrade_path(target_version: str) -> dict:
+def get_shortest_upgrade_path(target_version: str) -> dict[str, str | list[str]]:
     """
     Get the shortest upgrade path to a given CNV target version(latest z stream)
+
     Args:
-    target_version (str): The target version of the upgrade path.
+        target_version (str): The target version of the upgrade path.
+
     Returns:
-    dict: The shortest upgrade path to the target version.
+        dict: The shortest upgrade path to the target version.
     """
     upgrade_paths = get_upgrade_path(target_version=target_version)["path"]
     assert upgrade_paths, f"Couldn't find upgrade path for {target_version} version"
@@ -584,7 +588,7 @@ def get_shortest_upgrade_path(target_version: str) -> dict:
     return upgrade_path
 
 
-def get_iib_images_of_cnv_versions(versions: List[str], errata_status: str = "true") -> Dict[str, str]:
+def get_iib_images_of_cnv_versions(versions: list[str], errata_status: str = "true") -> dict[str, str]:
     base_image_url = f"{BREW_REGISTERY_SOURCE}/rh-osbs/iib"
     version_images = {}
     for version in versions:
@@ -595,7 +599,7 @@ def get_iib_images_of_cnv_versions(versions: List[str], errata_status: str = "tr
     return version_images
 
 
-def get_successful_fbc_build_iib(build_info: List[Dict[str, str]]) -> str:
+def get_successful_fbc_build_iib(build_info: list[dict[str, str]]) -> str:
     LOGGER.info(f"Build info found: {build_info}")
     for build in build_info:
         if build["pipeline"] == "RHTAP FBC":
@@ -603,7 +607,7 @@ def get_successful_fbc_build_iib(build_info: List[Dict[str, str]]) -> str:
     raise AssertionError("Should have a fbc build")
 
 
-def get_build_info_by_version(version: str, errata_status: str = "true") -> dict:
+def get_build_info_by_version(version: str, errata_status: str = "true") -> dict[str, Any]:
     query_string = f"version={version}"
     if errata_status:
         query_string = f"{query_string}&errata_status={errata_status}"
@@ -642,10 +646,10 @@ def get_generated_icsp_idms(
 
 
 def apply_icsp_idms(
-    file_paths: List[str],
-    machine_config_pools: List[MachineConfigPool],
-    mcp_conditions: Dict[str, List[Dict[str, str]]],
-    nodes: List[Node],
+    file_paths: list[str],
+    machine_config_pools: list[MachineConfigPool],
+    mcp_conditions: dict[str, list[dict[str, str]]],
+    nodes: list[Node],
     is_idms_file: bool,
     delete_file: bool = False,
 ) -> None:
@@ -667,12 +671,12 @@ def apply_icsp_idms(
     )
 
 
-def update_mcp_paused_spec(mcp: List[MachineConfigPool], paused: bool = True) -> None:
+def update_mcp_paused_spec(mcp: list[MachineConfigPool], paused: bool = True) -> None:
     for mcp in mcp:
         ResourceEditor(patches={mcp: {"spec": {"paused": paused}}}).update()
 
 
-def set_workload_update_methods_hco(hyperconverged_resource: HyperConverged, workload_update_method: List[str]) -> None:
+def set_workload_update_methods_hco(hyperconverged_resource: HyperConverged, workload_update_method: list[str]) -> None:
     ResourceEditorValidateHCOReconcile(
         patches={
             hyperconverged_resource: {
@@ -751,7 +755,7 @@ def wait_for_hco_csv_creation(
 
 
 def wait_for_odf_update(target_version: str) -> None:
-    def _get_updated_odf_csv(_target_version: str) -> List[str]:
+    def _get_updated_odf_csv(_target_version: str) -> list[str]:
         csv_list = []
         for csv in ClusterServiceVersion.get(namespace=NamespacesNames.OPENSHIFT_STORAGE):
             if any(

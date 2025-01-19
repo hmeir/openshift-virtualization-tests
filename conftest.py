@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Pytest conftest file for CNV tests
 """
@@ -12,12 +11,15 @@ import pathlib
 import re
 import shutil
 import traceback
+from typing import Any
 
 import pytest
 import shortuuid
+from _pytest.config import Config
 from kubernetes.dynamic.exceptions import ConflictError
 from ocp_resources.resource import get_client
 from ocp_resources.storage_class import StorageClass
+from pytest import Item
 from pytest_testconfig import config as py_config
 
 import utilities.infra
@@ -284,7 +286,7 @@ def pytest_cmdline_main(config):
         raise ValueError("Running with --cnv-source: Missing --cnv-version")
 
 
-def add_polarion_parameters_to_user_properties(item, matrix_name):
+def add_polarion_parameters_to_user_properties(item: Item, matrix_name: str) -> None:
     values = re.findall("(#.*?#)", item.name)  # Extract all substrings enclosed in '#' from item.name
     for value in values:
         value = value.strip("#")
@@ -296,7 +298,7 @@ def add_polarion_parameters_to_user_properties(item, matrix_name):
                 item.user_properties.append((f"polarion-parameter-{matrix_name}", value))
 
 
-def add_test_id_markers(item, marker_name):
+def add_test_id_markers(item: Item, marker_name: str) -> None:
     for marker in item.iter_markers(name=marker_name):
         test_id = marker.args[0]
         if marker_name == "polarion":
@@ -304,19 +306,23 @@ def add_test_id_markers(item, marker_name):
         item.user_properties.append((marker_name, test_id))
 
 
-def add_tier2_marker(item):
+def add_tier2_marker(item: Item) -> None:
     markers = [mark.name for mark in list(item.iter_markers())]
     if not [mark for mark in markers if mark in EXCLUDE_MARKER_FROM_TIER2_MARKER]:
         item.add_marker(marker="tier2")
 
 
-def mark_tests_by_team(item):
+def mark_tests_by_team(item: Item) -> None:
     for team, vals in TEAM_MARKERS.items():
         if item.location[0].split("/")[1] in vals:
             item.add_marker(marker=team)
 
 
-def filter_upgrade_tests(items, config, upgrade_markers):
+def filter_upgrade_tests(
+    items: list[Item],
+    config: Config,
+    upgrade_markers: list[str],
+) -> tuple[list[Item], list[Any]]:
     upgrade_tests, non_upgrade_tests = [], []
 
     for item in items:
@@ -340,16 +346,16 @@ def filter_upgrade_tests(items, config, upgrade_markers):
     return non_upgrade_tests, upgrade_tests
 
 
-def remove_upgrade_tests_based_on_config(cnv_source, upgrade_tests):
+def remove_upgrade_tests_based_on_config(
+    cnv_source: str,
+    upgrade_tests: list[Item],
+) -> tuple[list[Item], list[Item | None]]:
     """
     Filter the correct upgrade tests to execute based on config, since only one lane can be chosen.
 
     Args:
         cnv_source(str): cnv source option.
         upgrade_tests(list): list of upgrade tests.
-
-    Returns:
-        tuple: (keep - list of tests to execute, discard - list of tests to discard)
     """
     ocp_upgrade_test = None
     cnv_upgrade_test_with_prod_src = None
@@ -376,16 +382,15 @@ def remove_upgrade_tests_based_on_config(cnv_source, upgrade_tests):
             eus_upgrade_test,
         ]
     elif py_config["upgraded_product"] == "ocp":
-        discard = cnv_upgrade_tests
-        discard.append(eus_upgrade_test)
+        discard = [*cnv_upgrade_tests, eus_upgrade_test]
     else:
-        discard = cnv_upgrade_tests
-        discard.append(ocp_upgrade_test)
+        discard = [*cnv_upgrade_tests, ocp_upgrade_test]
+
     keep = [test for test in upgrade_tests if test not in discard]
     return keep, discard
 
 
-def filter_deprecated_api_tests(items, config):
+def filter_deprecated_api_tests(items: list[Item], config: Config) -> list[Item]:
     # filter out deprecated api tests, if explicitly asked or if running upgrade/install tests
     items_to_return = []
     if config.getoption("--skip-deprecated-api-test") or config.getoption("--install") or config.getoption("--upgrade"):
