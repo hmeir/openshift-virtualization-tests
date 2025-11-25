@@ -10,11 +10,14 @@ LOGGER = logging.getLogger(__name__)
 
 class TestRunbookUrlsAndPrometheusRules:
     @pytest.mark.polarion("CNV-10081")
-    def test_no_new_prometheus_rules(self, cnv_prometheus_rules_names):
+    def test_no_new_prometheus_rules(self, cnv_prometheus_rules_names, hpp_cr_installed):
         """
         Since validations for runbook url of all cnv alerts are done via polarion parameterization of prometheusrules,
         this test has been added to catch any new cnv prometheusrules that is not part of cnv_prometheus_rules_matrix
         """
+        if not hpp_cr_installed:
+            LOGGER.warning("HPP CR is not installed, removing prometheus-hpp-rules from the list of prometheus rules")
+            CNV_PROMETHEUS_RULES.remove("prometheus-hpp-rules")
         assert sorted(CNV_PROMETHEUS_RULES) == sorted(cnv_prometheus_rules_names), (
             f"New cnv prometheusrule found: {set(cnv_prometheus_rules_names) - set(CNV_PROMETHEUS_RULES)}"
         )
