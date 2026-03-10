@@ -3,9 +3,14 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
+from datetime import datetime
 from pprint import pformat
 from threading import Thread
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from ocp_utilities.monitoring import Prometheus
 
 from deepdiff import DeepDiff
 from kubernetes.dynamic import DynamicClient
@@ -484,73 +489,81 @@ def get_all_cnv_alerts(prometheus, file_name, base_directory):
     return cnv_alerts
 
 
-def get_alerts_fired_during_upgrade(prometheus, before_upgrade_alerts, base_directory):
-    after_upgrade_alerts = get_all_cnv_alerts(
+def query_alerts_fired_in_range(
+    prometheus: Prometheus,
+    start_timestamp: float,
+    end_timestamp: float,
+    step: str = "30s",
+) -> list[str]:
+    """Returns deduplicated alert names that were firing during the given time range.
+
+    Uses PromQL query_range to find all alerts that reached firing state at any point,
+    including alerts that have since resolved.
+
+    Args:
+        prometheus: Prometheus client instance.
+        start_timestamp: Start of the time range (Unix timestamp).
+        end_timestamp: End of the time range (Unix timestamp).
+        step: Query resolution step.
+
+    Returns:
+        List of unique alert names that were firing during the range, excluding whitelisted alerts.
+    """
+    query = f'ALERTS{{alertstate="{FIRING_STATE}",kubernetes_operator_part_of="kubevirt"}}'
+    response = prometheus._get_response(
+        query=f"{prometheus.api_v1}/query_range?query={query}&start={start_timestamp}&end={end_timestamp}&step={step}"
+    )
+    alert_names: set[str] = set()
+    for result in response.get("data", {}).get("result", []):
+        alert_name = result["metric"].get("alertname", "")
+        if alert_name and alert_name not in WHITELIST_ALERTS_UPGRADE_LIST:
+            alert_names.add(alert_name)
+
+    LOGGER.info(
+        f"Alerts fired in range "
+        f"[{datetime.fromtimestamp(start_timestamp).isoformat()}, "
+        f"{datetime.fromtimestamp(end_timestamp).isoformat()}]: {list(alert_names)}"
+    )
+    return list(alert_names)
+
+
+def get_alerts_fired_during_upgrade(
+    prometheus: Prometheus,
+    before_upgrade_alerts: list[dict[str, Any]],
+    upgrade_start_timestamp: float,
+    base_directory: str,
+) -> list[str]:
+    """Returns alert names that newly fired during the upgrade.
+
+    Uses a PromQL range query over the upgrade window to catch all alerts that reached
+    firing state, including those that resolved before this function runs. Filters out
+    alerts that were already firing before the upgrade started.
+
+    Args:
+        prometheus: Prometheus client instance.
+        before_upgrade_alerts: Alert dicts captured before upgrade.
+        upgrade_start_timestamp: Unix timestamp of when the upgrade started.
+        base_directory: Directory path for writing alert data files.
+
+    Returns:
+        List of alert names that newly fired during the upgrade.
+    """
+    end_timestamp = time.time()
+    all_fired_during_range = query_alerts_fired_in_range(
         prometheus=prometheus,
-        file_name="after_upgrade_alerts.json",
+        start_timestamp=upgrade_start_timestamp,
+        end_timestamp=end_timestamp,
+    )
+    before_upgrade_alert_names = {alert["labels"]["alertname"] for alert in before_upgrade_alerts}
+    new_alerts = [name for name in all_fired_during_range if name not in before_upgrade_alert_names]
+
+    LOGGER.info(f"New alerts fired during upgrade: {new_alerts}")
+    write_to_file(
         base_directory=base_directory,
+        file_name="alerts_fired_during_upgrade.json",
+        content=json.dumps(new_alerts),
     )
-    before_upgrade_alert_names = [alert["labels"]["alertname"] for alert in before_upgrade_alerts]
-    fired_during_upgrade = []
-    for alert in after_upgrade_alerts:
-        alert_name = alert["labels"]["alertname"]
-        if alert_name in before_upgrade_alert_names:
-            continue
-        LOGGER.info(f"Alert {alert_name}, state: {alert['state']} fired during upgrade.")
-        fired_during_upgrade.append(alert)
-    return fired_during_upgrade
-
-
-def process_alerts_fired_during_upgrade(prometheus, fired_alerts_during_upgrade):
-    pending_alerts = []
-    for alert in fired_alerts_during_upgrade:
-        if alert["state"] == "pending":
-            pending_alerts.append(alert["labels"]["alertname"])
-
-    LOGGER.info(f"Pending alerts: {pending_alerts}")
-    if pending_alerts:
-        # wait for the pending alerts to be fired within 10 minutes, since pending alerts would be part of alerts fired
-        # during upgrade, we don't need to fail, if pending alerts did not fire.
-        wait_for_pending_alerts_to_fire(prometheus=prometheus, pending_alerts=pending_alerts)
-
-
-def wait_for_pending_alerts_to_fire(pending_alerts, prometheus):
-    def _get_fired_alerts(_prometheus, _alert_list):
-        _all_alerts = _prometheus.alerts()
-        current_firing_alerts = []
-        current_pending_alerts = []
-        for _alert in _all_alerts["data"].get("alerts"):
-            if (
-                not _alert["labels"].get("kubernetes_operator_part_of")
-                or _alert["labels"]["kubernetes_operator_part_of"] != "kubevirt"
-            ):
-                continue
-            _alert_name = _alert["labels"]["alertname"]
-            if _alert["state"] == FIRING_STATE:
-                current_firing_alerts.append(_alert_name)
-            elif _alert["state"] == "pending":
-                current_pending_alerts.append(_alert_name)
-
-        not_fired = [_alert for _alert in _alert_list if _alert not in current_firing_alerts]
-        LOGGER.warning(f"Out of {_alert_list}, following alerts are still not fired: {not_fired}")
-        return not_fired
-
-    _pending_alerts = pending_alerts
-    sampler = TimeoutSampler(
-        wait_timeout=TIMEOUT_10MIN,
-        sleep=2,
-        func=_get_fired_alerts,
-        _prometheus=prometheus,
-        _alert_list=_pending_alerts,
-    )
-    try:
-        for sample in sampler:
-            if not sample:
-                return
-            _pending_alerts = sample
-            LOGGER.warning(f"Waiting on alerts: {_pending_alerts}")
-    except TimeoutExpiredError:
-        LOGGER.error(f"Out of {pending_alerts}, following alerts did not get to {FIRING_STATE}: {_pending_alerts}")
+    return new_alerts
 
 
 def get_upgrade_path(target_version: str) -> dict[str, list[dict[str, str | list[str]]]]:
