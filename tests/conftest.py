@@ -1475,7 +1475,7 @@ def cluster_info(
         f"\tOCS version: {ocs_current_version}\n"
         f"\tCNI type: {get_cluster_cni_type(admin_client=admin_client)}\n"
         f"\tWorkers type: {workers_type}\n"
-        f"\tCluster CPU Architecture: {nodes_cpu_architecture}\n"
+        f"\tCluster CPU Architecture: {",".join(nodes_cpu_architecture)}\n"
         f"\tIPv4 cluster: {ipv4_supported_cluster()}\n"
         f"\tIPv6 cluster: {ipv6_supported_cluster()}\n"
         f"\tVirtctl version: \n\t{virtctl_client_version}\n\t{virtctl_server_version}\n"
