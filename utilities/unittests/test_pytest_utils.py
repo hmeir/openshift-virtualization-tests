@@ -94,6 +94,33 @@ class TestValidateCpuArchParams:
         validate_cpu_arch_params(cpu_arch_option="arm64")
         assert mock_get_cluster_arch.call_count == 2
 
+    @patch("utilities.pytest_utils.get_cluster_architecture", return_value={"amd64"})
+    def test_homogeneous_amd_cluster_with_mismatched_arch_option_raises(self, mock_get_cluster_arch):
+        """Scenario 4: AMD cluster + --cpu-arch=arm64 raises — homogeneous clusters forbid --cpu-arch."""
+        with pytest.raises(
+            UnsupportedCPUArchitectureError,
+            match="`--cpu-arch` cmdline arg shouldn't be passed for homogeneous cluster",
+        ):
+            validate_cpu_arch_params(cpu_arch_option="arm64")
+
+    @patch("utilities.pytest_utils.get_cluster_architecture", return_value={"arm64"})
+    def test_homogeneous_arm_cluster_with_mismatched_arch_option_raises(self, mock_get_cluster_arch):
+        """Scenario 6: ARM cluster + --cpu-arch=amd64 raises — homogeneous clusters forbid --cpu-arch."""
+        with pytest.raises(
+            UnsupportedCPUArchitectureError,
+            match="`--cpu-arch` cmdline arg shouldn't be passed for homogeneous cluster",
+        ):
+            validate_cpu_arch_params(cpu_arch_option="amd64")
+
+    @patch("utilities.pytest_utils.get_cluster_architecture", return_value={"arm64"})
+    def test_homogeneous_arm_cluster_with_matching_arch_option_raises(self, mock_get_cluster_arch):
+        """Scenario 7: ARM cluster + --cpu-arch=arm64 raises — homogeneous clusters forbid --cpu-arch even when arch matches."""
+        with pytest.raises(
+            UnsupportedCPUArchitectureError,
+            match="`--cpu-arch` cmdline arg shouldn't be passed for homogeneous cluster",
+        ):
+            validate_cpu_arch_params(cpu_arch_option="arm64")
+
 
 class TestValidateCollectedTestsArchParams:
     """Test cases for validate_collected_tests_arch_params function"""

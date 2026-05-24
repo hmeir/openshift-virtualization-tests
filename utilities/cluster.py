@@ -1,10 +1,39 @@
+from collections.abc import Callable
 from functools import cache
 from subprocess import TimeoutExpired
 
 from kubernetes.dynamic import DynamicClient
+from ocp_resources.node import Node
 from ocp_resources.resource import get_client
 from pyhelper_utils.shell import run_command
 from timeout_sampler import TimeoutSampler
+
+
+def filter_schedulable_nodes(
+    nodes: list[Node],
+    cpu_arch: str | list[str] | None,
+    taint_check: Callable[[Node], bool],
+) -> list[Node]:
+    """Filter cluster nodes to those marked schedulable by KubeVirt.
+
+    Args:
+        nodes: All cluster nodes to filter.
+        cpu_arch: Architecture filter — a single arch string, list of archs, or None for no filter.
+        taint_check: Callable returning True if a node has a disqualifying taint.
+
+    Returns:
+        list[Node]: Nodes that are schedulable, untainted, kubelet-ready, and match the arch filter.
+    """
+    cpu_archs = [cpu_arch] if isinstance(cpu_arch, str) else cpu_arch
+    return [
+        node
+        for node in nodes
+        if node.labels.get("kubevirt.io/schedulable") == "true"
+        and not node.instance.spec.unschedulable
+        and not taint_check(node)
+        and node.kubelet_ready
+        and (not cpu_archs or node.labels.get("kubernetes.io/arch") in cpu_archs)
+    ]
 
 
 @cache

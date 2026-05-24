@@ -7,7 +7,82 @@ from unittest.mock import MagicMock, patch
 import pytest
 from timeout_sampler import TimeoutExpiredError
 
-from utilities.cluster import cache_admin_client, get_oc_whoami_username
+from utilities.cluster import cache_admin_client, filter_schedulable_nodes, get_oc_whoami_username
+
+
+class TestFilterSchedulableNodes:
+    """Test filter_schedulable_nodes for all multiarch/cpu-arch scenarios (1-3).
+
+    Scenarios 4-7 (homogeneous cluster + --cpu-arch) are validation-level errors
+    tested in TestValidateCpuArchParams in test_pytest_utils.py.
+    """
+
+    @staticmethod
+    def _make_node(arch: str, schedulable: bool = True, unschedulable: bool = False, ready: bool = True) -> MagicMock:
+        node = MagicMock()
+        node.labels = {
+            "kubevirt.io/schedulable": "true" if schedulable else "false",
+            "kubernetes.io/arch": arch,
+        }
+        node.instance.spec.unschedulable = unschedulable
+        node.kubelet_ready = ready
+        return node
+
+    @staticmethod
+    def _no_taint(node: MagicMock) -> bool:
+        return False
+
+    def test_single_arch_filter_returns_only_matching_nodes(self):
+        """Scenario 1 & 2: cpu_arch string filters nodes to that architecture only."""
+        amd_node = self._make_node(arch="amd64")
+        arm_node = self._make_node(arch="arm64")
+
+        amd_result = filter_schedulable_nodes(nodes=[amd_node, arm_node], cpu_arch="amd64", taint_check=self._no_taint)
+        assert [node.labels["kubernetes.io/arch"] for node in amd_result] == ["amd64"], (
+            "Expected only amd64 node when cpu_arch='amd64'"
+        )
+
+        arm_result = filter_schedulable_nodes(nodes=[amd_node, arm_node], cpu_arch="arm64", taint_check=self._no_taint)
+        assert [node.labels["kubernetes.io/arch"] for node in arm_result] == ["arm64"], (
+            "Expected only arm64 node when cpu_arch='arm64'"
+        )
+
+    def test_list_arch_filter_returns_all_matching_nodes(self):
+        """Scenario 3: cpu_arch list returns nodes from all specified architectures."""
+        amd_node = self._make_node(arch="amd64")
+        arm_node = self._make_node(arch="arm64")
+
+        result = filter_schedulable_nodes(
+            nodes=[amd_node, arm_node], cpu_arch=["amd64", "arm64"], taint_check=self._no_taint
+        )
+        assert len(result) == 2, "Expected both nodes when cpu_arch=['amd64', 'arm64']"
+        assert {node.labels["kubernetes.io/arch"] for node in result} == {"amd64", "arm64"}
+
+    def test_no_arch_filter_returns_all_schedulable_nodes(self):
+        """cpu_arch=None returns all schedulable nodes regardless of architecture."""
+        amd_node = self._make_node(arch="amd64")
+        arm_node = self._make_node(arch="arm64")
+
+        result = filter_schedulable_nodes(nodes=[amd_node, arm_node], cpu_arch=None, taint_check=self._no_taint)
+        assert len(result) == 2, "Expected all nodes when cpu_arch=None"
+
+    def test_non_schedulable_node_excluded(self):
+        """Nodes without kubevirt.io/schedulable=true are excluded."""
+        node = self._make_node(arch="amd64", schedulable=False)
+        result = filter_schedulable_nodes(nodes=[node], cpu_arch=None, taint_check=self._no_taint)
+        assert result == [], "Non-schedulable node must be excluded"
+
+    def test_tainted_node_excluded(self):
+        """Nodes for which taint_check returns True are excluded."""
+        node = self._make_node(arch="amd64")
+        result = filter_schedulable_nodes(nodes=[node], cpu_arch=None, taint_check=lambda _: True)
+        assert result == [], "Tainted node must be excluded"
+
+    def test_not_ready_node_excluded(self):
+        """Nodes with kubelet_ready=False are excluded."""
+        node = self._make_node(arch="amd64", ready=False)
+        result = filter_schedulable_nodes(nodes=[node], cpu_arch=None, taint_check=self._no_taint)
+        assert result == [], "Non-ready node must be excluded"
 
 
 class TestCacheAdminClient:
