@@ -6,6 +6,7 @@ from pytest_testconfig import config as py_config
 
 import utilities.hco
 from utilities.constants.hco import SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME
+from utilities.hyperconverged import HyperConvergedV1, parse_hco_fg_phases
 from utilities.infra import get_hyperconverged_resource
 
 LOGGER = logging.getLogger(__name__)
@@ -45,6 +46,15 @@ def hyperconverged_resource_scope_session(admin_client, hco_namespace, installin
         return get_hyperconverged_resource(client=admin_client, hco_ns_name=hco_namespace.name)
 
 
+@pytest.fixture(scope="session")
+def hco_fg_phases(admin_client):
+    """Feature-gate name -> lifecycle phase map parsed from the v1 HCO CRD (read once per session).
+
+    Consumed by feature-gate reads via ``HyperConvergedV1.is_feature_gate_enabled``.
+    """
+    return parse_hco_fg_phases(admin_client=admin_client)
+
+
 @pytest.fixture(scope="class")
 def hyperconverged_with_node_placement(request, admin_client, hco_namespace, hyperconverged_resource_scope_class):
     """
@@ -54,8 +64,12 @@ def hyperconverged_with_node_placement(request, admin_client, hco_namespace, hyp
     workloads_placement = request.param["workloads"]
 
     LOGGER.info("Fetching HCO to save its initial node placement configuration ")
-    initial_infra = hyperconverged_resource_scope_class.instance.to_dict()["spec"].get("infra", {})
-    initial_workloads = hyperconverged_resource_scope_class.instance.to_dict()["spec"].get("workloads", {})
+    initial_infra = hyperconverged_resource_scope_class.read_spec(
+        path=HyperConvergedV1.SpecPath.NODE_PLACEMENT_INFRA, default={}
+    )
+    initial_workloads = hyperconverged_resource_scope_class.read_spec(
+        path=HyperConvergedV1.SpecPath.NODE_PLACEMENT_WORKLOAD, default={}
+    )
     yield utilities.hco.apply_np_changes(
         admin_client=admin_client,
         hco=hyperconverged_resource_scope_class,
