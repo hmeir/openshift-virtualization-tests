@@ -23,7 +23,6 @@ from utilities.constants.hco import (
     EXPECTED_STATUS_CONDITIONS,
     HCO_SUBSCRIPTION,
     IMAGE_CRON_STR,
-    SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME,
 )
 from utilities.constants.storage import StorageClassNames
 from utilities.constants.timeouts import (
@@ -33,6 +32,12 @@ from utilities.constants.timeouts import (
     TIMEOUT_5SEC,
     TIMEOUT_10MIN,
     TIMEOUT_30MIN,
+)
+from utilities.hyperconverged import (
+    APPLICATION_AWARE_CONFIG_ENABLE_KEY,
+    INFRA_KEY,
+    WORKLOAD_KEY,
+    HyperConvergedV1,
 )
 from utilities.ssp import (
     wait_for_at_least_one_auto_update_data_import_cron,
@@ -197,17 +202,15 @@ def apply_np_changes(
     workloads_placement=None,
     exclude_deployments=None,
 ):
-    current_infra = hco.instance.to_dict()["spec"].get("infra")
-    current_workloads = hco.instance.to_dict()["spec"].get("workloads")
+    current_infra = hco.read_spec(path=HyperConvergedV1.SpecPath.NODE_PLACEMENT_INFRA)
+    current_workloads = hco.read_spec(path=HyperConvergedV1.SpecPath.NODE_PLACEMENT_WORKLOAD)
     target_infra = infra_placement if infra_placement is not None else current_infra
     target_workloads = workloads_placement if workloads_placement is not None else current_workloads
     if target_workloads != current_workloads or target_infra != current_infra:
-        patch = {
-            "spec": {
-                "infra": target_infra or None,
-                "workloads": target_workloads or None,
-            },
-        }
+        patch = HyperConvergedV1.spec_patch(
+            path=HyperConvergedV1.SpecPath.NODE_PLACEMENTS,
+            value={INFRA_KEY: target_infra or None, WORKLOAD_KEY: target_workloads or None},
+        )
         LOGGER.info(f"Updating HCO with node placement. {patch}")
         editor = ResourceEditor(patches={hco: patch})
         editor.update(backup_resources=False)
@@ -363,12 +366,12 @@ def wait_for_hco_version(client, hco_ns_name, cnv_version):
 
 def disable_common_boot_image_import_hco_spec(
     admin_client: DynamicClient,
-    hco_resource: HyperConverged,
+    hco_resource: HyperConvergedV1,
     golden_images_namespace: Namespace,
     golden_images_data_import_crons: list[DataImportCron],
     exclude_data_source_names: Collection[str] | None = None,
 ) -> Iterator[None]:
-    if hco_resource.instance.spec[ENABLE_COMMON_BOOT_IMAGE_IMPORT]:
+    if hco_resource.read_spec(path=HyperConvergedV1.SpecPath.ENABLE_COMMON_BOOT_IMAGE_IMPORT):
         update_common_boot_image_import_spec(
             hco_resource=hco_resource,
             enable=False,
@@ -387,7 +390,7 @@ def disable_common_boot_image_import_hco_spec(
 
 
 def enable_common_boot_image_import_spec_wait_for_data_import_cron(
-    hco_resource: HyperConverged,
+    hco_resource: HyperConvergedV1,
     admin_client: DynamicClient,
     namespace: Namespace,
     exclude_data_source_names: Collection[str] | None = None,
@@ -415,7 +418,9 @@ def update_common_boot_image_import_spec(hco_resource, enable):
             for sample in TimeoutSampler(
                 wait_timeout=TIMEOUT_2MIN,
                 sleep=5,
-                func=lambda: _hco_resource.instance.spec[ENABLE_COMMON_BOOT_IMAGE_IMPORT] == _enable,
+                func=lambda: (
+                    _hco_resource.read_spec(path=HyperConvergedV1.SpecPath.ENABLE_COMMON_BOOT_IMAGE_IMPORT) == _enable
+                ),
             ):
                 if sample:
                     return
@@ -424,7 +429,12 @@ def update_common_boot_image_import_spec(hco_resource, enable):
             raise
 
     editor = ResourceEditor(
-        patches={hco_resource: {"spec": {ENABLE_COMMON_BOOT_IMAGE_IMPORT: enable}}},
+        patches={
+            hco_resource: HyperConvergedV1.spec_patch(
+                path=HyperConvergedV1.SpecPath.ENABLE_COMMON_BOOT_IMAGE_IMPORT,
+                value=enable,
+            )
+        },
     )
     editor.update(backup_resources=True)
     _wait_for_spec_update(_hco_resource=hco_resource, _enable=enable)
@@ -552,7 +562,12 @@ def update_hco_templates_spec(
 ):
     with ResourceEditorValidateHCOReconcile(
         admin_client=admin_client,
-        patches={hyperconverged_resource: {"spec": {SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME: [updated_template]}}},
+        patches={
+            hyperconverged_resource: HyperConvergedV1.spec_patch(
+                path=HyperConvergedV1.SpecPath.DATA_IMPORT_CRON_TEMPLATES,
+                value=[updated_template],
+            )
+        },
         list_resource_reconcile=[SSP, CDI],
         wait_for_reconcile_post_update=True,
     ):
@@ -570,11 +585,15 @@ def update_hco_templates_spec(
 
 @contextmanager
 def enabled_aaq_in_hco(client, hco_namespace, hyperconverged_resource, enable_acrq_support=False):
-    patches = {hyperconverged_resource: {"spec": {"enableApplicationAwareQuota": True}}}
+    application_aware_config = {APPLICATION_AWARE_CONFIG_ENABLE_KEY: True}
     if enable_acrq_support:
-        patches[hyperconverged_resource]["spec"]["applicationAwareConfig"] = {
-            "allowApplicationAwareClusterResourceQuota": True,
-        }
+        application_aware_config["allowApplicationAwareClusterResourceQuota"] = True
+    patches = {
+        hyperconverged_resource: HyperConvergedV1.spec_patch(
+            path=HyperConvergedV1.SpecPath.APPLICATION_AWARE_CONFIG,
+            value=application_aware_config,
+        )
+    }
 
     with ResourceEditorValidateHCOReconcile(
         patches=patches,
