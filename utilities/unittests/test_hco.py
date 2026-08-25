@@ -538,7 +538,8 @@ class TestApplyNpChanges:
         mock_hco = MagicMock()
         mock_namespace = MagicMock()
 
-        mock_hco.instance.to_dict.return_value = {"spec": {"infra": None, "workloads": None}}
+        # read_spec is called for the current infra then workload node placement (both unset).
+        mock_hco.read_spec.side_effect = [None, None]
 
         new_infra_placement = {"nodeSelector": {"node-role.kubernetes.io/worker": ""}}
 
@@ -557,7 +558,8 @@ class TestApplyNpChanges:
         mock_namespace = MagicMock()
 
         existing_placement = {"nodeSelector": {"node-role.kubernetes.io/worker": ""}}
-        mock_hco.instance.to_dict.return_value = {"spec": {"infra": existing_placement, "workloads": None}}
+        # Current infra placement already matches the requested one; workload placement is unset.
+        mock_hco.read_spec.side_effect = [existing_placement, None]
 
         apply_np_changes(mock_admin_client, mock_hco, mock_namespace, infra_placement=existing_placement)
 
@@ -754,7 +756,7 @@ class TestDisableCommonBootImageImportHcoSpec:
         """Test disabling common boot image import when it's enabled"""
         mock_admin_client = MagicMock()
         mock_hco = MagicMock()
-        mock_hco.instance.spec = {"enableCommonBootImageImport": True}
+        mock_hco.read_spec.return_value = True
         mock_namespace = MagicMock()
         mock_dics = [MagicMock()]
 
@@ -784,7 +786,7 @@ class TestDisableCommonBootImageImportHcoSpec:
         """Test that exclude_data_source_names is forwarded to the teardown call"""
         mock_admin_client = MagicMock()
         mock_hco = MagicMock()
-        mock_hco.instance.spec = {"enableCommonBootImageImport": True}
+        mock_hco.read_spec.return_value = True
         mock_namespace = MagicMock()
         mock_dics = [MagicMock()]
         exclude_names = {"custom-datasource"}
@@ -813,7 +815,7 @@ class TestDisableCommonBootImageImportHcoSpec:
         """Test context manager when common boot image import is already disabled"""
         mock_admin_client = MagicMock()
         mock_hco = MagicMock()
-        mock_hco.instance.spec = {"enableCommonBootImageImport": False}
+        mock_hco.read_spec.return_value = False
         mock_namespace = MagicMock()
         mock_dics = [MagicMock()]
 
@@ -911,7 +913,7 @@ class TestUpdateCommonBootImageImportSpec:
     def test_update_spec_enable(self, mock_editor_class, mock_sampler):
         """Test enabling common boot image import spec"""
         mock_hco = MagicMock()
-        mock_hco.instance.spec = {"enableCommonBootImageImport": True}
+        mock_hco.read_spec.return_value = True
 
         mock_editor = MagicMock()
         mock_editor_class.return_value = mock_editor
@@ -930,7 +932,7 @@ class TestUpdateCommonBootImageImportSpec:
     def test_update_spec_timeout(self, mock_editor_class, mock_sampler):
         """Test timeout when spec doesn't update"""
         mock_hco = MagicMock()
-        mock_hco.instance.spec = {"enableCommonBootImageImport": False}
+        mock_hco.read_spec.return_value = False
 
         mock_editor = MagicMock()
         mock_editor_class.return_value = mock_editor
@@ -1252,7 +1254,7 @@ class TestEnabledAaqInHco:
         call_args = mock_editor_class.call_args
         patches = call_args[1]["patches"]
         assert mock_hco in patches
-        assert patches[mock_hco]["spec"]["enableApplicationAwareQuota"] is True
+        assert patches[mock_hco]["spec"]["deployment"]["applicationAwareConfig"]["enable"] is True
 
     @patch("utilities.hco.TimeoutSampler")
     @patch("utilities.hco.utilities.infra.get_pod_by_name_prefix")
@@ -1279,8 +1281,9 @@ class TestEnabledAaqInHco:
         # Verify ACRQ support is included
         call_args = mock_editor_class.call_args
         patches = call_args[1]["patches"]
-        assert patches[mock_hco]["spec"]["applicationAwareConfig"] == {
-            "allowApplicationAwareClusterResourceQuota": True
+        assert patches[mock_hco]["spec"]["deployment"]["applicationAwareConfig"] == {
+            "enable": True,
+            "allowApplicationAwareClusterResourceQuota": True,
         }
 
     @patch("utilities.hco.TimeoutSampler")
