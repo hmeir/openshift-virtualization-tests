@@ -58,6 +58,7 @@ from utilities.constants.virt import DISK_SERIAL, NODE_HUGE_PAGES_1GI_KEY
 from utilities.data_collector import get_data_collector_dir, write_to_file
 from utilities.exceptions import ResourceValueError
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import STORAGE_KEY
 from utilities.infra import (
     ExecCommandOnPod,
 )
@@ -504,7 +505,7 @@ def download_and_extract_tar(tarfile_url, dest_path):
 def update_hco_with_persistent_storage_config(admin_client, hco_cr, storage_class):
     with ResourceEditorValidateHCOReconcile(
         admin_client=admin_client,
-        patches={hco_cr: {"spec": {"vmStateStorageClass": storage_class}}},
+        patches={hco_cr: {"spec": {STORAGE_KEY: {"vmStateStorageClass": storage_class}}}},
         list_resource_reconcile=[KubeVirt],
         wait_for_reconcile_post_update=True,
     ):

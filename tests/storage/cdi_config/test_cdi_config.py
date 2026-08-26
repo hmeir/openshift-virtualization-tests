@@ -8,6 +8,7 @@ from timeout_sampler import TimeoutSampler
 from tests.storage.utils import LOGGER
 from utilities.constants.components import CDI_UPLOADPROXY
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import STORAGE_KEY, WORKLOAD_RESOURCE_REQUIREMENTS_KEY
 
 pytestmark = pytest.mark.post_upgrade
 
@@ -99,19 +100,19 @@ def test_cdi_spec_reconciled_by_hco(initial_cdi_config_from_cr, cdi_with_extra_n
     ("hco_updated_spec_stanza", "expected_in_cdi_config_from_cr"),
     [
         pytest.param(
-            {"resourceRequirements": {"storageWorkloads": STORAGE_WORKLOADS_DICT}},
+            {STORAGE_KEY: {WORKLOAD_RESOURCE_REQUIREMENTS_KEY: STORAGE_WORKLOADS_DICT}},
             {"podResourceRequirements": STORAGE_WORKLOADS_DICT},
             marks=(pytest.mark.polarion("CNV-6000")),
             id="test_storage_workloads_in_hco_propagated_to_cdi_cr",
         ),
         pytest.param(
-            NON_EXISTENT_SCRATCH_SC_DICT,
+            {STORAGE_KEY: NON_EXISTENT_SCRATCH_SC_DICT},
             NON_EXISTENT_SCRATCH_SC_DICT,
             marks=(pytest.mark.polarion("CNV-6001")),
             id="test_scratch_sc_in_hco_propagated_to_cdi_cr",
         ),
         pytest.param(
-            {"storageImport": {"insecureRegistries": INSECURE_REGISTRIES_LIST}},
+            {STORAGE_KEY: {"storageImport": {"insecureRegistries": INSECURE_REGISTRIES_LIST}}},
             {"insecureRegistries": INSECURE_REGISTRIES_LIST},
             marks=(pytest.mark.polarion("CNV-6092")),
             id="test_insecure_registries_in_hco_propagated_to_cdi_cr",

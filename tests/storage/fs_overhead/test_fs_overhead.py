@@ -13,6 +13,7 @@ from ocp_resources.persistent_volume_claim import PersistentVolumeClaim
 from tests.utils import create_cirros_vm
 from utilities.constants import Images
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import STORAGE_KEY
 from utilities.storage import virtctl_upload_dv
 
 FS_OVERHEAD_20 = 0.2
@@ -43,8 +44,10 @@ def updated_fs_overhead_20_with_hco(
         patches={
             hyperconverged_resource_scope_module: {
                 "spec": {
-                    "filesystemOverhead": {
-                        "storageClass": {storage_class_with_filesystem_volume_mode: str(FS_OVERHEAD_20)}
+                    STORAGE_KEY: {
+                        "filesystemOverhead": {
+                            "storageClass": {storage_class_with_filesystem_volume_mode: str(FS_OVERHEAD_20)}
+                        }
                     }
                 }
             }
