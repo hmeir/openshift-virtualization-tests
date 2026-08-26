@@ -248,6 +248,34 @@ Each module groups constants by domain (e.g., `cluster.py`, `virt.py`, `storage.
 - If no matching module exists, create one with a module docstring describing its scope and listing what does NOT belong (with a pointer to the correct module)
 - The `__init__.py` re-exports all names for backward compatibility — new code should import directly from the submodule (e.g., `from utilities.constants.virt import X`)
 
+### HCO API Version (v5.0+)
+
+On CNV 5.0+ the `HyperConverged` (HCO) CR is served as **v1**, whose `spec` is
+restructured into hierarchical groups. The full v1beta1→v1 field mapping is in
+[`docs/featuregates/hco_v1_api_field_mapping.md`](docs/featuregates/hco_v1_api_field_mapping.md).
+
+- ❌ **NEVER write an HCO CR field at its old flat path.** The v1 API silently
+  prunes unknown flat fields, so a write like `{"spec": {"liveMigrationConfig": ...}}`
+  becomes a no-op. Nest it under its v1 group:
+  `{"spec": {VIRTUALIZATION_KEY: {"liveMigrationConfig": ...}}}`.
+- ✅ **Use the group-key constants** exported from `utilities/hyperconverged.py`
+  (`VIRTUALIZATION_KEY`, `STORAGE_KEY`, `SECURITY_KEY`, `DEPLOYMENT_KEY`,
+  `WORKLOAD_SOURCES_KEY`, `NETWORKING_KEY`, plus restructured leaf keys like
+  `NODE_PLACEMENTS_KEY`, `WORKLOAD_KEY`, `OBSOLETE_CPU_MODELS_KEY`) as the single
+  source of truth for the v1 names. Writes and reads use the plain repo idiom
+  directly at the call site — inline `{"spec": {GROUP_KEY: {field: value}}}` patch
+  dicts and `instance.spec.<group>.<field>` /
+  `instance.to_dict()["spec"].get(GROUP_KEY, {}).get(field)` reads.
+- **Feature gates** on the HCO CR are a v1 **list** `[{name, state}]` (state omitted
+  = Enabled), not a `{name: bool}` dict. Write with
+  `hco.feature_gates_patch(**gates)` and read with
+  `hco.is_feature_gate_enabled(name=..., fg_phases=...)` (`fg_phases` from the
+  `hco_fg_phases` session fixture). Never mutate `spec.featureGates` as a dict.
+- **Only HyperConverged CR sites change.** KubeVirt, CDI, CNAO, SSP, APIServer,
+  HostPathProvisioner and VM/VMI/Template specs reuse many of the same field names
+  and are UNCHANGED — do not add group wrappers to operand sites. HCO `status`
+  reads also stay flat.
+
 ### conftest.py Architecture
 
 **Root `conftest.py`** (project root):
