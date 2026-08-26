@@ -1,18 +1,15 @@
 """HyperConverged (HCO) CR — v1 API knowledge.
 
-Holds the v1-shaped ``HyperConverged`` subclass used across the automation. All v1 spec
-structure lives here so call sites stay version-agnostic:
+Holds the v1-shaped ``HyperConverged`` subclass used across the automation, plus the v1
+feature-gate behavior (list ``{name, state}`` encoding and lifecycle-phase defaults).
 
-- **Reads** go through :meth:`HyperConvergedV1.read_spec` (public escape hatch for a dynamic
-  path) or, in later group PRs, per-field ``@property`` reads that delegate to it.
-- **Writes** are patch-dict builders (:meth:`HyperConvergedV1.spec_patch`,
-  :meth:`HyperConvergedV1.feature_gates_patch`) fed to the existing
-  ``ResourceEditorValidateHCOReconcile`` — they are never applied here.
+Spec reads and writes use the repo's plain idiom directly at the call sites — inline
+``{"spec": {...}}`` patch dicts for ``ResourceEditor`` writes and ``instance.spec`` /
+``instance.to_dict()["spec"]`` access for reads. The v1 group/field key names are exported here
+as constants so call sites share one source of truth for the (restructured) v1 field names.
 
 The v1 spec field paths (v1beta1 → v1 restructuring) are documented in
-``docs/featuregates/hco_v1_api_field_mapping.md``. Only the field paths currently exercised by
-the automation are declared in :class:`HyperConvergedV1.SpecPath`; more are added as each group
-of call sites is migrated.
+``docs/featuregates/hco_v1_api_field_mapping.md``.
 
 A sibling ``HyperConvergedV1Beta1`` subclass and a shared base are intentionally NOT provided
 yet — they are added only when dedicated v1beta1 tests need them (v1beta1 is served-only on
@@ -26,11 +23,7 @@ from ocp_resources.custom_resource_definition import CustomResourceDefinition
 from ocp_resources.hyperconverged import HyperConverged
 from ocp_resources.resource import Resource
 
-from utilities.constants.hco import (
-    ENABLE_COMMON_BOOT_IMAGE_IMPORT,
-    FEATURE_GATES,
-    SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME,
-)
+from utilities.constants.hco import FEATURE_GATES
 
 if TYPE_CHECKING:
     from kubernetes.dynamic import DynamicClient
@@ -65,54 +58,6 @@ class HyperConvergedV1(HyperConverged):
     (``v1`` on CNV 5.0). ``kind`` stays ``HyperConverged`` for any subclass depth, so the
     correct CRD is targeted.
     """
-
-    class SpecPath:
-        """v1 ``spec.*`` key paths, as tuples composed from the module-level key constants.
-
-        Only paths exercised by migrated call sites are declared; add entries as needed.
-        """
-
-        NODE_PLACEMENTS = (DEPLOYMENT_KEY, NODE_PLACEMENTS_KEY)
-        NODE_PLACEMENT_INFRA = (DEPLOYMENT_KEY, NODE_PLACEMENTS_KEY, INFRA_KEY)
-        NODE_PLACEMENT_WORKLOAD = (DEPLOYMENT_KEY, NODE_PLACEMENTS_KEY, WORKLOAD_KEY)
-        ENABLE_COMMON_BOOT_IMAGE_IMPORT = (WORKLOAD_SOURCES_KEY, ENABLE_COMMON_BOOT_IMAGE_IMPORT)
-        DATA_IMPORT_CRON_TEMPLATES = (WORKLOAD_SOURCES_KEY, SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME)
-        APPLICATION_AWARE_CONFIG = (DEPLOYMENT_KEY, APPLICATION_AWARE_CONFIG_KEY)
-
-    def read_spec(self, path: tuple[str, ...], default: Any = None) -> Any:
-        """Read a nested value from the live ``spec`` by key path.
-
-        Reads via ``self.instance`` so the value reflects current cluster state.
-
-        Args:
-            path: Sequence of nested keys under ``spec`` (e.g. ``SpecPath.NODE_PLACEMENT_INFRA``).
-            default: Returned if any segment along the path is missing.
-
-        Returns:
-            The value at ``spec.<path>``, or ``default`` if the path does not exist.
-        """
-        node: Any = self.instance.to_dict()["spec"]
-        for key in path:
-            if not isinstance(node, dict):
-                return default
-            node = node.get(key, default)
-        return node
-
-    @staticmethod
-    def spec_patch(path: tuple[str, ...], value: Any) -> dict[str, Any]:
-        """Build a merge-patch dict setting ``spec.<path>`` to ``value``.
-
-        Args:
-            path: Sequence of nested keys under ``spec``.
-            value: Value to place at the leaf of the path.
-
-        Returns:
-            A ``{"spec": {..nested..}}`` dict for ``ResourceEditorValidateHCOReconcile``.
-        """
-        node: Any = value
-        for key in reversed(path):
-            node = {key: node}
-        return {"spec": node}
 
     @staticmethod
     def feature_gates_patch(**gates: bool) -> dict[str, Any]:
@@ -156,7 +101,7 @@ class HyperConvergedV1(HyperConverged):
         Returns:
             ``True`` if the gate is effectively enabled.
         """
-        for entry in self.read_spec(path=(FEATURE_GATES,), default=[]):
+        for entry in self.instance.to_dict()["spec"].get(FEATURE_GATES, []):
             if entry["name"] == name:
                 return entry.get("state", FEATURE_GATE_ENABLED_STATE) == FEATURE_GATE_ENABLED_STATE
         return fg_phases[name] == FEATURE_GATE_PHASE_BETA

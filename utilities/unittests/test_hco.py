@@ -538,8 +538,8 @@ class TestApplyNpChanges:
         mock_hco = MagicMock()
         mock_namespace = MagicMock()
 
-        # read_spec is called for the current infra then workload node placement (both unset).
-        mock_hco.read_spec.side_effect = [None, None]
+        # Current infra and workload node placement are both unset (no deployment group).
+        mock_hco.instance.to_dict.return_value = {"spec": {}}
 
         new_infra_placement = {"nodeSelector": {"node-role.kubernetes.io/worker": ""}}
 
@@ -559,7 +559,9 @@ class TestApplyNpChanges:
 
         existing_placement = {"nodeSelector": {"node-role.kubernetes.io/worker": ""}}
         # Current infra placement already matches the requested one; workload placement is unset.
-        mock_hco.read_spec.side_effect = [existing_placement, None]
+        mock_hco.instance.to_dict.return_value = {
+            "spec": {"deployment": {"nodePlacements": {"infra": existing_placement}}}
+        }
 
         apply_np_changes(mock_admin_client, mock_hco, mock_namespace, infra_placement=existing_placement)
 
@@ -756,7 +758,7 @@ class TestDisableCommonBootImageImportHcoSpec:
         """Test disabling common boot image import when it's enabled"""
         mock_admin_client = MagicMock()
         mock_hco = MagicMock()
-        mock_hco.read_spec.return_value = True
+        mock_hco.instance.to_dict.return_value = {"spec": {"workloadSources": {"enableCommonBootImageImport": True}}}
         mock_namespace = MagicMock()
         mock_dics = [MagicMock()]
 
@@ -786,7 +788,7 @@ class TestDisableCommonBootImageImportHcoSpec:
         """Test that exclude_data_source_names is forwarded to the teardown call"""
         mock_admin_client = MagicMock()
         mock_hco = MagicMock()
-        mock_hco.read_spec.return_value = True
+        mock_hco.instance.to_dict.return_value = {"spec": {"workloadSources": {"enableCommonBootImageImport": True}}}
         mock_namespace = MagicMock()
         mock_dics = [MagicMock()]
         exclude_names = {"custom-datasource"}
@@ -815,7 +817,7 @@ class TestDisableCommonBootImageImportHcoSpec:
         """Test context manager when common boot image import is already disabled"""
         mock_admin_client = MagicMock()
         mock_hco = MagicMock()
-        mock_hco.read_spec.return_value = False
+        mock_hco.instance.to_dict.return_value = {"spec": {"workloadSources": {"enableCommonBootImageImport": False}}}
         mock_namespace = MagicMock()
         mock_dics = [MagicMock()]
 
@@ -913,7 +915,6 @@ class TestUpdateCommonBootImageImportSpec:
     def test_update_spec_enable(self, mock_editor_class, mock_sampler):
         """Test enabling common boot image import spec"""
         mock_hco = MagicMock()
-        mock_hco.read_spec.return_value = True
 
         mock_editor = MagicMock()
         mock_editor_class.return_value = mock_editor
@@ -932,7 +933,6 @@ class TestUpdateCommonBootImageImportSpec:
     def test_update_spec_timeout(self, mock_editor_class, mock_sampler):
         """Test timeout when spec doesn't update"""
         mock_hco = MagicMock()
-        mock_hco.read_spec.return_value = False
 
         mock_editor = MagicMock()
         mock_editor_class.return_value = mock_editor

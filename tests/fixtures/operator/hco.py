@@ -6,7 +6,13 @@ from pytest_testconfig import config as py_config
 
 import utilities.hco
 from utilities.constants.hco import SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME
-from utilities.hyperconverged import HyperConvergedV1, parse_hco_fg_phases
+from utilities.hyperconverged import (
+    DEPLOYMENT_KEY,
+    INFRA_KEY,
+    NODE_PLACEMENTS_KEY,
+    WORKLOAD_KEY,
+    parse_hco_fg_phases,
+)
 from utilities.infra import get_hyperconverged_resource
 
 LOGGER = logging.getLogger(__name__)
@@ -64,12 +70,14 @@ def hyperconverged_with_node_placement(request, admin_client, hco_namespace, hyp
     workloads_placement = request.param["workloads"]
 
     LOGGER.info("Fetching HCO to save its initial node placement configuration ")
-    initial_infra = hyperconverged_resource_scope_class.read_spec(
-        path=HyperConvergedV1.SpecPath.NODE_PLACEMENT_INFRA, default={}
+    node_placements = (
+        hyperconverged_resource_scope_class.instance
+        .to_dict()["spec"]
+        .get(DEPLOYMENT_KEY, {})
+        .get(NODE_PLACEMENTS_KEY, {})
     )
-    initial_workloads = hyperconverged_resource_scope_class.read_spec(
-        path=HyperConvergedV1.SpecPath.NODE_PLACEMENT_WORKLOAD, default={}
-    )
+    initial_infra = node_placements.get(INFRA_KEY, {})
+    initial_workloads = node_placements.get(WORKLOAD_KEY, {})
     yield utilities.hco.apply_np_changes(
         admin_client=admin_client,
         hco=hyperconverged_resource_scope_class,
