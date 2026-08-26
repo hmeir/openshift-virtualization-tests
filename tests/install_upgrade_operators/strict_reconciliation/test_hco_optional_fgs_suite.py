@@ -61,8 +61,8 @@ class TestNegativeFeatureGates:
         hco_spec_scope_module,
         hco_with_non_default_feature_gates,
     ):
-        default_hco_fg = hco_spec_scope_module[FEATURE_GATES]
-        updated_hco_fg = get_hco_spec(admin_client=admin_client, hco_namespace=hco_namespace)[FEATURE_GATES]
+        default_hco_fg = hco_spec_scope_module.get(FEATURE_GATES, [])
+        updated_hco_fg = get_hco_spec(admin_client=admin_client, hco_namespace=hco_namespace).get(FEATURE_GATES, [])
         assert updated_hco_fg == default_hco_fg, (
             f"HCO featuregates: {default_hco_fg} got updated with invalid featuregates {updated_hco_fg}"
         )

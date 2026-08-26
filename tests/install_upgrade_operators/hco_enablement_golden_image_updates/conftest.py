@@ -19,10 +19,10 @@ from utilities.constants.cluster import KUBERNETES_ARCH_LABEL
 from utilities.constants.components import HCO_OPERATOR
 from utilities.constants.hco import (
     COMMON_TEMPLATES_KEY_NAME,
-    FEATURE_GATES,
     SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME,
 )
 from utilities.hco import disable_common_boot_image_import_hco_spec
+from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 from utilities.ssp import get_ssp_resource
 
 
@@ -148,7 +148,7 @@ def expected_common_templates_related_resources(
 ):
     """Return expected golden image resource names for the current cluster state.
 
-    Relies on the class-level feature-gate fixture (applied via @pytest.mark.usefixtures
+    Relies on the class-level workload-sources fixture (applied via @pytest.mark.usefixtures
     on the test class) being resolved before this fixture reads the HCO spec.
 
     When enableMultiArchBootImageImport is enabled:
@@ -157,11 +157,14 @@ def expected_common_templates_related_resources(
         - ImageStreams: always base names
     When disabled: all base names.
     """
-    feature_gate_enabled = hyperconverged_resource_scope_class.instance.spec.get(FEATURE_GATES, {}).get(
-        ENABLE_MULTI_ARCH_BOOT_IMAGE_IMPORT, False
+    multiarch_boot_image_import_enabled = (
+        hyperconverged_resource_scope_class.instance
+        .to_dict()["spec"]
+        .get(WORKLOAD_SOURCES_KEY, {})
+        .get(ENABLE_MULTI_ARCH_BOOT_IMAGE_IMPORT, False)
     )
 
-    if not feature_gate_enabled:
+    if not multiarch_boot_image_import_enabled:
         return {kind: set(names) for kind, names in base_common_templates_related_resources.items()}
 
     expected_resources = {}

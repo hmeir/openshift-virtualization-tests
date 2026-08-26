@@ -21,6 +21,7 @@ from utilities.constants.hco import (
 from utilities.constants.pytest import QUARANTINED
 from utilities.constants.storage import WILDCARD_CRON_EXPRESSION
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 
 pytestmark = [pytest.mark.gating, pytest.mark.arm64, pytest.mark.s390x]
 
@@ -104,7 +105,9 @@ def updated_common_template(
         admin_client=admin_client,
         patches={
             hyperconverged_resource_scope_function: {
-                "spec": {SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME: updated_common_template_dict_list}
+                "spec": {
+                    WORKLOAD_SOURCES_KEY: {SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME: updated_common_template_dict_list}
+                }
             }
         },
         list_resource_reconcile=[CDI, SSP],

@@ -124,13 +124,11 @@ def hco_with_non_default_feature_gates(
     hyperconverged_resource_scope_function,
 ):
     new_fgs = request.param["fgs"]
-    hco_fgs = hyperconverged_resource_scope_function.instance.to_dict()["spec"]["featureGates"]
-
-    for fg in new_fgs:
-        hco_fgs[fg] = True
+    current_fgs = hyperconverged_resource_scope_function.instance.to_dict()["spec"].get("featureGates", [])
+    updated_fgs = current_fgs + [{"name": fg} for fg in new_fgs]
     with ResourceEditorValidateHCOReconcile(
         admin_client=admin_client,
-        patches={hyperconverged_resource_scope_function: {"spec": {"featureGates": hco_fgs}}},
+        patches={hyperconverged_resource_scope_function: {"spec": {"featureGates": updated_fgs}}},
         list_resource_reconcile=[KubeVirt],
         wait_for_reconcile_post_update=True,
     ):

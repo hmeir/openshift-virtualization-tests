@@ -17,6 +17,7 @@ from utilities.hco import (
     get_hco_version,
     wait_for_hco_conditions,
 )
+from utilities.hyperconverged import DEPLOYMENT_KEY
 from utilities.virt import VirtualMachineForTests, fedora_vm_body, running_vm
 
 BLOCK_STRATEGY = "BlockUninstallIfWorkloadsExist"
@@ -32,11 +33,16 @@ DV_PARAMS = {
 
 
 def assert_expected_strategy(resource_objects, expected_strategy):
-    incorrect_components = {
-        component: resource_obj.instance.spec.uninstallStrategy
-        for component, resource_obj in resource_objects.items()
-        if resource_obj.instance.spec.uninstallStrategy != expected_strategy
-    }
+    # HCO stores uninstallStrategy under the v1 spec.deployment group; CDI/KubeVirt keep it flat.
+    incorrect_components = {}
+    for component, resource_obj in resource_objects.items():
+        strategy = (
+            resource_obj.instance.to_dict()["spec"].get(DEPLOYMENT_KEY, {}).get("uninstallStrategy")
+            if component == "hco"
+            else resource_obj.instance.spec.uninstallStrategy
+        )
+        if strategy != expected_strategy:
+            incorrect_components[component] = strategy
 
     assert not incorrect_components, (
         f"Incorrect uninstallStrategy found for following component(s) {incorrect_components}"
@@ -136,7 +142,9 @@ def hco_uninstall_strategy_remove_workloads(
 ):
     with ResourceEditorValidateHCOReconcile(
         admin_client=admin_client,
-        patches={hyperconverged_resource_scope_function: {"spec": {"uninstallStrategy": REMOVE_STRATEGY}}},
+        patches={
+            hyperconverged_resource_scope_function: {"spec": {DEPLOYMENT_KEY: {"uninstallStrategy": REMOVE_STRATEGY}}}
+        },
     ):
         wait_for_hco_conditions(
             admin_client=admin_client,

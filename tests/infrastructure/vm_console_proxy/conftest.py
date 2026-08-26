@@ -38,6 +38,7 @@ from utilities.constants.instance_types import (
 )
 from utilities.constants.timeouts import TIMEOUT_10MIN
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import DEPLOYMENT_KEY
 from utilities.infra import login_with_token, login_with_user_password
 from utilities.virt import VirtualMachineForTests, wait_for_running_vm
 
@@ -50,7 +51,9 @@ def enabled_vm_console_proxy_spec(admin_client, hyperconverged_resource_scope_cl
         patches={
             hyperconverged_resource_scope_class: {
                 "spec": {
-                    "deployVmConsoleProxy": True,
+                    DEPLOYMENT_KEY: {
+                        "deployVmConsoleProxy": True,
+                    }
                 }
             }
         },

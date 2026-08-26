@@ -22,6 +22,7 @@ from utilities.hco import (
     ResourceEditorValidateHCOReconcile,
     wait_for_hco_conditions,
 )
+from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 from utilities.infra import create_ns
 from utilities.storage import get_data_sources_managed_by_data_import_cron
 
@@ -48,7 +49,7 @@ def updated_common_template_custom_ns(
         admin_client=admin_client,
         patches={
             hyperconverged_resource_scope_class: {
-                "spec": {COMMON_BOOT_IMAGE_NAMESPACE_STR: custom_golden_images_namespace.name}
+                "spec": {WORKLOAD_SOURCES_KEY: {COMMON_BOOT_IMAGE_NAMESPACE_STR: custom_golden_images_namespace.name}}
             }
         },
         list_resource_reconcile=[SSP, CDI],
@@ -74,7 +75,9 @@ def updated_common_templates_non_existent_ns(
     with ResourceEditorValidateHCOReconcile(
         admin_client=admin_client,
         patches={
-            hyperconverged_resource_scope_function: {"spec": {COMMON_BOOT_IMAGE_NAMESPACE_STR: "non-existent-ns"}}
+            hyperconverged_resource_scope_function: {
+                "spec": {WORKLOAD_SOURCES_KEY: {COMMON_BOOT_IMAGE_NAMESPACE_STR: "non-existent-ns"}}
+            }
         },
     ):
         yield

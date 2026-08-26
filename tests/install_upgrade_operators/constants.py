@@ -11,12 +11,8 @@ KEY_PATH_SEPARATOR = "->"
 TEMPLATE_VALIDATOR = "templateValidator"
 DEVELOPER_CONFIGURATION = "developerConfiguration"
 MEDIATED_DEVICES_CONFIGURATION = "mediatedDevicesConfiguration"
-# featuregates:
-DEPLOY_KUBE_SECONDARY_DNS = "deployKubeSecondaryDNS"
+# v1 spec.workloadSources field key (was a feature gate in v1beta1).
 ENABLE_MULTI_ARCH_BOOT_IMAGE_IMPORT = "enableMultiArchBootImageImport"
-PERSISTENT_RESERVATION = "persistentReservation"
-FG_DISABLED = False
-FG_ENABLED = True
 
 FEATUREGATES = "featureGates"
 RESOURCE_TYPE_STR = "resource_type"
@@ -39,18 +35,6 @@ EXPECTED_CDI_HARDCODED_FEATUREGATES = {
     "DataVolumeClaimAdoption",
     "HonorWaitForFirstConsumer",
     "WebhookPvcRendering",
-}
-HCO_DEFAULT_FEATUREGATES = {
-    DEPLOY_KUBE_SECONDARY_DNS: FG_DISABLED,
-    PERSISTENT_RESERVATION: FG_DISABLED,
-    "alignCPUs": FG_DISABLED,
-    "downwardMetrics": FG_DISABLED,
-    ENABLE_MULTI_ARCH_BOOT_IMAGE_IMPORT: FG_DISABLED,
-    "decentralizedLiveMigration": FG_ENABLED,
-    "declarativeHotplugVolumes": FG_ENABLED,
-    "objectGraph": FG_DISABLED,
-    "incrementalBackup": FG_DISABLED,
-    "containerPathVolumes": FG_DISABLED,
 }
 CUSTOM_DATASOURCE_NAME = "custom-datasource"
 WORKLOAD_UPDATE_STRATEGY_KEY_NAME = "workloadUpdateStrategy"

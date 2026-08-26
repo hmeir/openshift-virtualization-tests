@@ -8,6 +8,7 @@ from utilities.constants.hco import (
     SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME,
 )
 from utilities.hco import wait_for_auto_boot_config_stabilization
+from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 
 pytestmark = [pytest.mark.gating, pytest.mark.arm64, pytest.mark.s390x]
 
@@ -33,6 +34,6 @@ def test_enable_and_delete_spec_enable_common_boot_image_import_hco_cr(
     hyperconverged_resource_scope_function,
 ):
     wait_for_auto_boot_config_stabilization(admin_client=admin_client, hco_namespace=hco_namespace)
-    assert not hyperconverged_resource_scope_function.instance.spec[ENABLE_COMMON_BOOT_IMAGE_IMPORT], (
-        f"Spec {ENABLE_COMMON_BOOT_IMAGE_IMPORT} was not disabled in HCO."
-    )
+    assert not hyperconverged_resource_scope_function.instance.to_dict()["spec"][WORKLOAD_SOURCES_KEY][
+        ENABLE_COMMON_BOOT_IMAGE_IMPORT
+    ], f"Spec {ENABLE_COMMON_BOOT_IMAGE_IMPORT} was not disabled in HCO."

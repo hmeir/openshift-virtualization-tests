@@ -13,6 +13,7 @@ from utilities.constants.hco import (
     TLS_SECURITY_PROFILE,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import SECURITY_KEY
 
 LOGGER = logging.getLogger(__name__)
 pytestmark = pytest.mark.s390x
@@ -33,7 +34,7 @@ def test_set_hco_crypto_failed_without_required_cipher(
         "ECDHE-ECDSA-AES256-GCM-SHA384",
         "ECDHE-RSA-AES256-GCM-SHA384",
     ]
-    tls_spec = {"spec": {TLS_SECURITY_PROFILE: tls_custom_profile}}
+    tls_spec = {"spec": {SECURITY_KEY: {TLS_SECURITY_PROFILE: tls_custom_profile}}}
     with pytest.raises(ForbiddenError, match=r"missing an HTTP/2-required"):
         with ResourceEditorValidateHCOReconcile(
             admin_client=admin_client,
@@ -54,7 +55,11 @@ def test_set_ciphers_for_tlsv13(admin_client, hyperconverged_resource_scope_func
     with pytest.raises(ForbiddenError, match=error_string):
         with ResourceEditorValidateHCOReconcile(
             admin_client=admin_client,
-            patches={hyperconverged_resource_scope_function: {"spec": {TLS_SECURITY_PROFILE: tls_custom_profile}}},
+            patches={
+                hyperconverged_resource_scope_function: {
+                    "spec": {SECURITY_KEY: {TLS_SECURITY_PROFILE: tls_custom_profile}}
+                }
+            },
         ):
             LOGGER.error(
                 "Setting HCO with custom tlsSecurityProfile with TLS Version 1.3 "

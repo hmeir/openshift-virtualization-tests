@@ -38,6 +38,7 @@ from utilities.constants.timeouts import (
     TIMEOUT_5SEC,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile, enabled_aaq_in_hco
+from utilities.hyperconverged import APPLICATION_AWARE_CONFIG_KEY, DEPLOYMENT_KEY
 from utilities.infra import create_ns, get_pod_by_name_prefix, label_project
 from utilities.virt import (
     VirtualMachineForTests,
@@ -76,7 +77,9 @@ def updated_aaq_allocation_method(
         patches={
             hyperconverged_resource_scope_class: {
                 "spec": {
-                    "applicationAwareConfig": {"vmiCalcConfigName": aaq_allocation_methods_matrix__class__},
+                    DEPLOYMENT_KEY: {
+                        APPLICATION_AWARE_CONFIG_KEY: {"vmiCalcConfigName": aaq_allocation_methods_matrix__class__},
+                    }
                 }
             }
         },
@@ -181,7 +184,9 @@ def enabled_acrq_support(admin_client, hco_namespace, hyperconverged_resource_sc
         patches={
             hyperconverged_resource_scope_module: {
                 "spec": {
-                    "applicationAwareConfig": {"allowApplicationAwareClusterResourceQuota": True},
+                    DEPLOYMENT_KEY: {
+                        APPLICATION_AWARE_CONFIG_KEY: {"allowApplicationAwareClusterResourceQuota": True},
+                    }
                 }
             }
         },

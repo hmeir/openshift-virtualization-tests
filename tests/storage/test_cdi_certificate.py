@@ -21,6 +21,7 @@ from utilities.constants.pytest import QUARANTINED
 from utilities.constants.storage import CDI_SECRETS
 from utilities.constants.timeouts import TIMEOUT_1MIN, TIMEOUT_3MIN, TIMEOUT_5SEC, TIMEOUT_10MIN
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import SECURITY_KEY
 from utilities.storage import (
     check_upload_virtctl_result,
     create_dv,
@@ -269,9 +270,10 @@ def test_upload_after_validate_aggregated_api_cert(
 
 @pytest.fixture()
 def certificate_exists(cdi_spec, hco_spec):
-    # Verify CDI and HCO spec for cert configuration
-    for spec in (cdi_spec, hco_spec):
-        assert spec.get("certConfig"), "No certConfig found in spec."
+    # Verify CDI and HCO spec for cert configuration.
+    # CDI operand keeps certConfig flat; HCO CR moved it under spec.security in the v1 API.
+    assert cdi_spec.get("certConfig"), "No certConfig found in CDI spec."
+    assert hco_spec.get(SECURITY_KEY, {}).get("certConfig"), "No certConfig found in HCO spec.security."
 
 
 @pytest.fixture()
@@ -282,9 +284,11 @@ def updated_certconfig_in_hco_cr(admin_client, hyperconverged_resource_scope_fun
         patches={
             hyperconverged_resource_scope_function: {
                 "spec": {
-                    "certConfig": {
-                        "ca": {"duration": "1h20m0s", "renewBefore": "1h10m0s"},
-                        "server": {"duration": "1h10m0s", "renewBefore": "1h5m0s"},
+                    SECURITY_KEY: {
+                        "certConfig": {
+                            "ca": {"duration": "1h20m0s", "renewBefore": "1h10m0s"},
+                            "server": {"duration": "1h10m0s", "renewBefore": "1h5m0s"},
+                        }
                     }
                 }
             }

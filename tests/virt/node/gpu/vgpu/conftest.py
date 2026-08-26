@@ -22,7 +22,7 @@ from tests.virt.node.gpu.utils import (
     wait_for_nvidia_vgpu_manager,
 )
 from tests.virt.utils import patch_hco_cr_with_mdev_permitted_hostdevices
-from utilities.constants.hco import DISABLE_MDEV_CONFIGURATION, FEATURE_GATES
+from utilities.constants.hco import DISABLE_MDEV_CONFIGURATION
 from utilities.hco import ResourceEditorValidateHCOReconcile
 from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.infra import label_nodes
@@ -103,7 +103,11 @@ def hco_with_disable_mdev_configuration(admin_client, hyperconverged_resource_sc
     """
     with ResourceEditorValidateHCOReconcile(
         admin_client=admin_client,
-        patches={hyperconverged_resource_scope_session: {"spec": {FEATURE_GATES: {DISABLE_MDEV_CONFIGURATION: True}}}},
+        patches={
+            hyperconverged_resource_scope_session: hyperconverged_resource_scope_session.feature_gates_patch(**{
+                DISABLE_MDEV_CONFIGURATION: True
+            })
+        },
         list_resource_reconcile=[KubeVirt],
         wait_for_reconcile_post_update=True,
     ):

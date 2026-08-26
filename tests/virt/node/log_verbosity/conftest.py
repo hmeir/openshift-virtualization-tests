@@ -5,6 +5,7 @@ from tests.virt.node.log_verbosity.constants import (
     VIRT_LOG_VERBOSITY_LEVEL_6,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import DEPLOYMENT_KEY
 
 
 @pytest.fixture(scope="class")
@@ -29,7 +30,7 @@ def updated_log_verbosity_config(
         admin_client=admin_client,
         patches={
             hyperconverged_resource_scope_class: {
-                "spec": {"logVerbosityConfig": log_verbosity_level_six_config_dict[request.param]}
+                "spec": {DEPLOYMENT_KEY: {"logVerbosityConfig": log_verbosity_level_six_config_dict[request.param]}}
             }
         },
         list_resource_reconcile=[KubeVirt],

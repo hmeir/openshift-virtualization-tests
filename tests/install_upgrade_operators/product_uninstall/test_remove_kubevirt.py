@@ -10,6 +10,7 @@ from utilities.constants.timeouts import (
     TIMEOUT_4MIN,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import DEPLOYMENT_KEY
 from utilities.virt import VirtualMachineForTests, fedora_vm_body
 
 
@@ -17,7 +18,9 @@ from utilities.virt import VirtualMachineForTests, fedora_vm_body
 def set_uninstall_strategy_remove_workloads(admin_client, hyperconverged_resource_scope_function):
     with ResourceEditorValidateHCOReconcile(
         admin_client=admin_client,
-        patches={hyperconverged_resource_scope_function: {"spec": {"uninstallStrategy": "RemoveWorkloads"}}},
+        patches={
+            hyperconverged_resource_scope_function: {"spec": {DEPLOYMENT_KEY: {"uninstallStrategy": "RemoveWorkloads"}}}
+        },
         list_resource_reconcile=[CDI, KubeVirt],
         wait_for_reconcile_post_update=True,
     ) as edits:
