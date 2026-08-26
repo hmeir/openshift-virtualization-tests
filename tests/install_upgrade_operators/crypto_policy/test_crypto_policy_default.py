@@ -11,6 +11,7 @@ from pytest_testconfig import config as py_config
 
 from tests.install_upgrade_operators.constants import (
     KEY_NAME_STR,
+    KEY_PATH_SEPARATOR,
     RESOURCE_NAME_STR,
     RESOURCE_NAMESPACE_STR,
     RESOURCE_TYPE_STR,
@@ -31,6 +32,7 @@ from utilities.constants.components import (
     SSP_KUBEVIRT_HYPERCONVERGED,
 )
 from utilities.constants.hco import TLS_SECURITY_PROFILE
+from utilities.hyperconverged import SECURITY_KEY
 
 LOGGER = logging.getLogger(__name__)
 pytestmark = [pytest.mark.post_upgrade, pytest.mark.sno, pytest.mark.s390x]
@@ -54,7 +56,7 @@ pytestmark = [pytest.mark.post_upgrade, pytest.mark.sno, pytest.mark.s390x]
                 RESOURCE_TYPE_STR: HyperConverged,
                 RESOURCE_NAME_STR: py_config["hco_cr_name"],
                 RESOURCE_NAMESPACE_STR: py_config["hco_namespace"],
-                KEY_NAME_STR: TLS_SECURITY_PROFILE,
+                KEY_NAME_STR: f"{SECURITY_KEY}{KEY_PATH_SEPARATOR}{TLS_SECURITY_PROFILE}",
             },
             HyperConverged,
             marks=(pytest.mark.polarion("CNV-9464")),

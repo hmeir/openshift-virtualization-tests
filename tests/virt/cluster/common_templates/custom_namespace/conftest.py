@@ -14,6 +14,7 @@ from tests.virt.cluster.common_templates.custom_namespace.utils import (
 )
 from utilities.constants.namespaces import NamespacesNames
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 from utilities.infra import create_ns
 
 COMMON_TEMPLATES_NAMESPACE_KEY = "commonTemplatesNamespace"
@@ -36,7 +37,7 @@ def opt_in_custom_template_namespace(
         admin_client=admin_client,
         patches={
             hyperconverged_resource_scope_class: {
-                "spec": {COMMON_TEMPLATES_NAMESPACE_KEY: custom_vm_template_namespace.name}
+                "spec": {WORKLOAD_SOURCES_KEY: {COMMON_TEMPLATES_NAMESPACE_KEY: custom_vm_template_namespace.name}}
             }
         },
         list_resource_reconcile=[SSP, CDI],
@@ -122,7 +123,11 @@ def opted_out_custom_template_namespace(
 ):
     ResourceEditorValidateHCOReconcile(
         admin_client=admin_client,
-        patches={hyperconverged_resource_scope_function: {"spec": {COMMON_TEMPLATES_NAMESPACE_KEY: None}}},
+        patches={
+            hyperconverged_resource_scope_function: {
+                "spec": {WORKLOAD_SOURCES_KEY: {COMMON_TEMPLATES_NAMESPACE_KEY: None}}
+            }
+        },
         list_resource_reconcile=[SSP, CDI],
         wait_for_reconcile_post_update=True,
     ).update()

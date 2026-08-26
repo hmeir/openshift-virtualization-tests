@@ -24,6 +24,7 @@ from utilities.constants.timeouts import (
     TIMEOUT_11MIN,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile, wait_for_hco_conditions
+from utilities.hyperconverged import SECURITY_KEY
 from utilities.jira import is_jira_open
 
 LOGGER = logging.getLogger(__name__)
@@ -43,7 +44,11 @@ def hyperconverged_resource_certconfig_change(
     LOGGER.info("Modifying certconfig in HCO CR")
     with ResourceEditorValidateHCOReconcile(
         admin_client=admin_client,
-        patches={hyperconverged_resource_scope_class: {"spec": {HCO_CR_CERT_CONFIG_KEY: target_certconfig_stanza}}},
+        patches={
+            hyperconverged_resource_scope_class: {
+                "spec": {SECURITY_KEY: {HCO_CR_CERT_CONFIG_KEY: target_certconfig_stanza}}
+            }
+        },
         list_resource_reconcile=[CDI, NetworkAddonsConfig, SSP],
         wait_for_reconcile_post_update=True,
     ):

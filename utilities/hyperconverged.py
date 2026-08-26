@@ -34,6 +34,7 @@ STORAGE_KEY = "storage"
 SECURITY_KEY = "security"
 DEPLOYMENT_KEY = "deployment"
 WORKLOAD_SOURCES_KEY = "workloadSources"
+NETWORKING_KEY = "networking"
 NODE_PLACEMENTS_KEY = "nodePlacements"
 INFRA_KEY = "infra"
 WORKLOAD_KEY = "workload"  # singular in v1 (v1beta1 used the plural "workloads")

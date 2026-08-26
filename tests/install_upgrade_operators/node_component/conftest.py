@@ -32,6 +32,7 @@ from utilities.constants.hco import (
 )
 from utilities.constants.timeouts import TIMEOUT_2MIN, TIMEOUT_5MIN, TIMEOUT_10SEC
 from utilities.hco import add_labels_to_nodes, apply_np_changes, wait_for_hco_conditions
+from utilities.hyperconverged import DEPLOYMENT_KEY, INFRA_KEY, NODE_PLACEMENTS_KEY, WORKLOAD_KEY
 from utilities.infra import (
     get_daemonset_by_name,
     get_deployment_by_name,
@@ -216,8 +217,14 @@ def hyperconverged_resource_before_np(admin_client, hco_namespace, hyperconverge
     Update HCO CR with infrastructure and workloads spec.
     """
     LOGGER.info("Fetching HCO to save its initial node placement configuration ")
-    initial_infra = hyperconverged_resource_scope_class.instance.to_dict()["spec"].get("infra", {})
-    initial_workloads = hyperconverged_resource_scope_class.instance.to_dict()["spec"].get("workloads", {})
+    node_placements = (
+        hyperconverged_resource_scope_class.instance
+        .to_dict()["spec"]
+        .get(DEPLOYMENT_KEY, {})
+        .get(NODE_PLACEMENTS_KEY, {})
+    )
+    initial_infra = node_placements.get(INFRA_KEY, {})
+    initial_workloads = node_placements.get(WORKLOAD_KEY, {})
     yield hyperconverged_resource_scope_class
     LOGGER.info("Revert to initial HCO node placement configuration ")
     apply_np_changes(

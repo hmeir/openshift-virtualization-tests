@@ -20,6 +20,7 @@ from utilities.constants.hco import (
     SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME,
 )
 from utilities.hco import update_hco_templates_spec, wait_for_hco_conditions
+from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 
 pytestmark = [pytest.mark.arm64, pytest.mark.s390x]
 
@@ -44,7 +45,7 @@ def editor_hyperconverged_custom_template(common_templates_scope_session, hyperc
     return ResourceEditor(
         patches={
             hyperconverged_resource_scope_function: {
-                "spec": {SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME: [custom_template_dict]}
+                "spec": {WORKLOAD_SOURCES_KEY: {SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME: [custom_template_dict]}}
             }
         },
     )

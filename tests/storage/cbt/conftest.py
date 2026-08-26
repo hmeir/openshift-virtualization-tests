@@ -52,7 +52,7 @@ def cbt_hco_configured(
         patches={
             hyperconverged_resource_scope_module: {
                 "spec": {
-                    "featureGates": {"incrementalBackup": True},
+                    **hyperconverged_resource_scope_module.feature_gates_patch(incrementalBackup=True)["spec"],
                     VIRTUALIZATION_KEY: {
                         "changedBlockTrackingLabelSelectors": {
                             "virtualMachineLabelSelector": {"matchLabels": CBT_ENABLED_LABEL},
