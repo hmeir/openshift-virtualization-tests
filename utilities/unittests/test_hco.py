@@ -238,14 +238,18 @@ class TestGetHcoSpec:
 
         mock_hco = MagicMock()
         mock_hco.instance.to_dict.return_value = {
-            "spec": {"infra": {}, "workloads": {}, "featureGates": {"enableCommonBootImageImport": True}}
+            "spec": {
+                "virtualization": {"liveMigrationConfig": {}},
+                "deployment": {"nodePlacements": {"infra": {}, "workload": {}}},
+                "featureGates": [{"name": "downwardMetrics"}],
+            }
         }
         mock_get_hco.return_value = mock_hco
 
         result = get_hco_spec(mock_admin_client, mock_namespace)
 
-        assert "infra" in result
-        assert "workloads" in result
+        assert "virtualization" in result
+        assert "deployment" in result
         assert "featureGates" in result
         mock_get_hco.assert_called_once_with(client=mock_admin_client, hco_ns_name="openshift-cnv")
 
