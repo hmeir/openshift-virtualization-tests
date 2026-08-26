@@ -15,11 +15,11 @@ from tests.install_upgrade_operators.strict_reconciliation.constants import (
     OBSOLETE_CPUS_KEY,
     OBSOLETE_CPUS_VALUE_HCO_CR,
     OBSOLETE_CPUS_VALUE_KUBEVIRT_CR,
-    RESOURCE_REQUIREMENTS,
     SCRATCH_SPACE_STORAGE_CLASS_KEY,
     SCRATCH_SPACE_STORAGE_CLASS_VALUE,
     STORAGE_IMPORT_KEY_HCO_CR,
     STORAGE_IMPORT_VALUE,
+    WORKLOAD_RESOURCE_REQUIREMENTS_VALUE,
 )
 from tests.install_upgrade_operators.strict_reconciliation.utils import (
     compare_expected_with_cr,
@@ -29,6 +29,16 @@ from utilities.constants.components import (
     KUBEVIRT_HCO_NAME,
 )
 from utilities.constants.hco import RESOURCE_REQUIREMENTS_KEY_HCO_CR
+from utilities.hyperconverged import (
+    DEPLOYMENT_KEY,
+    INFRA_KEY,
+    NODE_PLACEMENTS_KEY,
+    OBSOLETE_CPU_MODELS_KEY,
+    STORAGE_KEY,
+    VIRTUALIZATION_KEY,
+    WORKLOAD_KEY,
+    WORKLOAD_RESOURCE_REQUIREMENTS_KEY,
+)
 
 pytestmark = [pytest.mark.post_upgrade, pytest.mark.sno, pytest.mark.arm64, pytest.mark.s390x]
 
@@ -66,13 +76,15 @@ class TestHCONonDefaultFields:
             pytest.param(
                 {
                     "rpatch": {
-                        "spec": {RESOURCE_REQUIREMENTS_KEY_HCO_CR: RESOURCE_REQUIREMENTS},
+                        "spec": {
+                            STORAGE_KEY: {WORKLOAD_RESOURCE_REQUIREMENTS_KEY: WORKLOAD_RESOURCE_REQUIREMENTS_VALUE}
+                        },
                     },
                     "list_resource_reconcile": [CDI],
                 },
                 {"resource_class": CDI, "resource_name": CDI_KUBEVIRT_HYPERCONVERGED},
                 RESOURCE_REQUIREMENTS_KEY_HCO_CR,
-                RESOURCE_REQUIREMENTS["storageWorkloads"],
+                WORKLOAD_RESOURCE_REQUIREMENTS_VALUE,
                 marks=(pytest.mark.polarion("CNV-6541")),
                 id="set_non_default_field_resourceRequirements",
             ),
@@ -80,7 +92,7 @@ class TestHCONonDefaultFields:
                 {
                     "rpatch": {
                         "spec": {
-                            SCRATCH_SPACE_STORAGE_CLASS_KEY: SCRATCH_SPACE_STORAGE_CLASS_VALUE,
+                            STORAGE_KEY: {SCRATCH_SPACE_STORAGE_CLASS_KEY: SCRATCH_SPACE_STORAGE_CLASS_VALUE},
                         }
                     },
                     "list_resource_reconcile": [CDI],
@@ -95,7 +107,7 @@ class TestHCONonDefaultFields:
                 {
                     "rpatch": {
                         "spec": {
-                            OBSOLETE_CPUS_KEY: OBSOLETE_CPUS_VALUE_HCO_CR,
+                            VIRTUALIZATION_KEY: {OBSOLETE_CPU_MODELS_KEY: OBSOLETE_CPUS_VALUE_HCO_CR},
                         }
                     },
                     "list_resource_reconcile": [KubeVirt],
@@ -110,7 +122,7 @@ class TestHCONonDefaultFields:
                 {
                     "rpatch": {
                         "spec": {
-                            STORAGE_IMPORT_KEY_HCO_CR: STORAGE_IMPORT_VALUE,
+                            STORAGE_KEY: {STORAGE_IMPORT_KEY_HCO_CR: STORAGE_IMPORT_VALUE},
                         }
                     },
                     "list_resource_reconcile": [CDI],
@@ -125,7 +137,7 @@ class TestHCONonDefaultFields:
                 {
                     "rpatch": {
                         "spec": {
-                            NP_INFRA_KEY: NP_INFRA_VALUE_HCO_CR,
+                            DEPLOYMENT_KEY: {NODE_PLACEMENTS_KEY: {INFRA_KEY: NP_INFRA_VALUE_HCO_CR}},
                         }
                     },
                     "list_resource_reconcile": [CDI, KubeVirt],
@@ -141,7 +153,7 @@ class TestHCONonDefaultFields:
                 {
                     "rpatch": {
                         "spec": {
-                            NP_WORKLOADS_KEY_HCO_CR: NP_WORKLOADS_VALUE_HCO_CR,
+                            DEPLOYMENT_KEY: {NODE_PLACEMENTS_KEY: {WORKLOAD_KEY: NP_WORKLOADS_VALUE_HCO_CR}},
                         }
                     },
                     "list_resource_reconcile": [CDI, KubeVirt],

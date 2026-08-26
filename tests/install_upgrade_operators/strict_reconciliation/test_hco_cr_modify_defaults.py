@@ -52,6 +52,7 @@ from tests.install_upgrade_operators.utils import (
     wait_for_spec_change,
 )
 from utilities.hco import get_hco_spec
+from utilities.hyperconverged import SECURITY_KEY, VIRTUALIZATION_KEY
 from utilities.storage import get_hyperconverged_cdi
 from utilities.virt import get_hyperconverged_kubevirt
 
@@ -65,12 +66,12 @@ class TestOperatorsModify:
         [
             pytest.param(
                 {
-                    "patch": {"spec": {HCO_CR_CERT_CONFIG_KEY: EXPCT_CERTC_DEFAULTS}},
+                    "patch": {"spec": {SECURITY_KEY: {HCO_CR_CERT_CONFIG_KEY: EXPCT_CERTC_DEFAULTS}}},
                 },
                 {
                     "hco_spec": {
                         "expected": EXPCT_CERTC_DEFAULTS,
-                        "base_path": [HCO_CR_CERT_CONFIG_KEY],
+                        "base_path": [SECURITY_KEY, HCO_CR_CERT_CONFIG_KEY],
                     },
                     "kubevirt_spec": {
                         "expected": KUBEVIRT_DEFAULT,
@@ -86,10 +87,12 @@ class TestOperatorsModify:
                 {
                     "patch": {
                         "spec": {
-                            HCO_CR_CERT_CONFIG_KEY: {
-                                HCO_CR_CERT_CONFIG_CA_KEY: {
-                                    HCO_CR_CERT_CONFIG_DURATION_KEY: CERTC_DEFAULT_48H,
-                                },
+                            SECURITY_KEY: {
+                                HCO_CR_CERT_CONFIG_KEY: {
+                                    HCO_CR_CERT_CONFIG_CA_KEY: {
+                                        HCO_CR_CERT_CONFIG_DURATION_KEY: CERTC_DEFAULT_48H,
+                                    },
+                                }
                             }
                         }
                     },
@@ -97,7 +100,7 @@ class TestOperatorsModify:
                 {
                     "hco_spec": {
                         "expected": HCO_MOD_DEFAULT_CA_DUR,
-                        "base_path": [HCO_CR_CERT_CONFIG_KEY],
+                        "base_path": [SECURITY_KEY, HCO_CR_CERT_CONFIG_KEY],
                     },
                     "kubevirt_spec": {
                         "expected": KV_MOD_DEFAULT_CA_DUR,
@@ -113,10 +116,12 @@ class TestOperatorsModify:
                 {
                     "patch": {
                         "spec": {
-                            HCO_CR_CERT_CONFIG_KEY: {
-                                HCO_CR_CERT_CONFIG_CA_KEY: {
-                                    HCO_CR_CERT_CONFIG_RENEW_BEFORE_KEY: CERTC_DEFAULT_24H,
-                                },
+                            SECURITY_KEY: {
+                                HCO_CR_CERT_CONFIG_KEY: {
+                                    HCO_CR_CERT_CONFIG_CA_KEY: {
+                                        HCO_CR_CERT_CONFIG_RENEW_BEFORE_KEY: CERTC_DEFAULT_24H,
+                                    },
+                                }
                             }
                         }
                     },
@@ -124,7 +129,7 @@ class TestOperatorsModify:
                 {
                     "hco_spec": {
                         "expected": HCO_MOD_DEFAULT_CA_RB,
-                        "base_path": HCO_CR_CERT_CONFIG_KEY,
+                        "base_path": [SECURITY_KEY, HCO_CR_CERT_CONFIG_KEY],
                     },
                     "kubevirt_spec": {
                         "expected": KV_MOD_DEFAULT_CA_RB,
@@ -140,10 +145,12 @@ class TestOperatorsModify:
                 {
                     "patch": {
                         "spec": {
-                            HCO_CR_CERT_CONFIG_KEY: {
-                                HCO_CR_CERT_CONFIG_SERVER_KEY: {
-                                    HCO_CR_CERT_CONFIG_DURATION_KEY: CERTC_DEFAULT_24H,
-                                },
+                            SECURITY_KEY: {
+                                HCO_CR_CERT_CONFIG_KEY: {
+                                    HCO_CR_CERT_CONFIG_SERVER_KEY: {
+                                        HCO_CR_CERT_CONFIG_DURATION_KEY: CERTC_DEFAULT_24H,
+                                    },
+                                }
                             }
                         }
                     },
@@ -151,7 +158,7 @@ class TestOperatorsModify:
                 {
                     "hco_spec": {
                         "expected": HCO_MOD_DEFAULT_SER_DUR,
-                        "base_path": HCO_CR_CERT_CONFIG_KEY,
+                        "base_path": [SECURITY_KEY, HCO_CR_CERT_CONFIG_KEY],
                     },
                     "kubevirt_spec": {
                         "expected": KV_MOD_DEFAULT_SER_DUR,
@@ -167,10 +174,12 @@ class TestOperatorsModify:
                 {
                     "patch": {
                         "spec": {
-                            HCO_CR_CERT_CONFIG_KEY: {
-                                HCO_CR_CERT_CONFIG_SERVER_KEY: {
-                                    HCO_CR_CERT_CONFIG_RENEW_BEFORE_KEY: CERTC_DEFAULT_12H,
-                                },
+                            SECURITY_KEY: {
+                                HCO_CR_CERT_CONFIG_KEY: {
+                                    HCO_CR_CERT_CONFIG_SERVER_KEY: {
+                                        HCO_CR_CERT_CONFIG_RENEW_BEFORE_KEY: CERTC_DEFAULT_12H,
+                                    },
+                                }
                             }
                         }
                     },
@@ -178,7 +187,7 @@ class TestOperatorsModify:
                 {
                     "hco_spec": {
                         "expected": HCO_MOD_DEFAULT_SER_RB,
-                        "base_path": HCO_CR_CERT_CONFIG_KEY,
+                        "base_path": [SECURITY_KEY, HCO_CR_CERT_CONFIG_KEY],
                     },
                     "kubevirt_spec": {
                         "expected": KV_MOD_DEFAULT_SER_RB,
@@ -191,11 +200,11 @@ class TestOperatorsModify:
                 id="Test_Modify_HCO_CR_CertConfig_server_renewBefore",
             ),
             pytest.param(
-                {"patch": {"spec": {LIVE_MIGRATION_CONFIG_KEY: EXPCT_LM_DEFAULTS}}},
+                {"patch": {"spec": {VIRTUALIZATION_KEY: {LIVE_MIGRATION_CONFIG_KEY: EXPCT_LM_DEFAULTS}}}},
                 {
                     "hco_spec": {
                         "expected": EXPCT_LM_DEFAULTS,
-                        "base_path": LIVE_MIGRATION_CONFIG_KEY,
+                        "base_path": [VIRTUALIZATION_KEY, LIVE_MIGRATION_CONFIG_KEY],
                     },
                     "kubevirt_spec": {
                         "expected": EXPCT_LM_DEFAULTS,
@@ -214,8 +223,10 @@ class TestOperatorsModify:
                 {
                     "patch": {
                         "spec": {
-                            LIVE_MIGRATION_CONFIG_KEY: {
-                                COMPLETION_TIMEOUT_PER_GIB_KEY: LM_COMPLETIONTIMEOUTPERGIB_DEFAULT,
+                            VIRTUALIZATION_KEY: {
+                                LIVE_MIGRATION_CONFIG_KEY: {
+                                    COMPLETION_TIMEOUT_PER_GIB_KEY: LM_COMPLETIONTIMEOUTPERGIB_DEFAULT,
+                                }
                             }
                         }
                     }
@@ -223,7 +234,7 @@ class TestOperatorsModify:
                 {
                     "hco_spec": {
                         "expected": LM_CUST_DEFAULT_C,
-                        "base_path": LIVE_MIGRATION_CONFIG_KEY,
+                        "base_path": [VIRTUALIZATION_KEY, LIVE_MIGRATION_CONFIG_KEY],
                     },
                     "kubevirt_spec": {
                         "expected": LM_CUST_DEFAULT_C,
@@ -242,8 +253,10 @@ class TestOperatorsModify:
                 {
                     "patch": {
                         "spec": {
-                            LIVE_MIGRATION_CONFIG_KEY: {
-                                PARALLEL_MIGRATIONS_PER_CLUSTER_KEY: LM_PARALLELMIGRATIONSPERCLUSTER_DEFAULT,
+                            VIRTUALIZATION_KEY: {
+                                LIVE_MIGRATION_CONFIG_KEY: {
+                                    PARALLEL_MIGRATIONS_PER_CLUSTER_KEY: LM_PARALLELMIGRATIONSPERCLUSTER_DEFAULT,
+                                }
                             }
                         }
                     }
@@ -251,7 +264,7 @@ class TestOperatorsModify:
                 {
                     "hco_spec": {
                         "expected": LM_CUST_DEFAULT_PM,
-                        "base_path": LIVE_MIGRATION_CONFIG_KEY,
+                        "base_path": [VIRTUALIZATION_KEY, LIVE_MIGRATION_CONFIG_KEY],
                     },
                     "kubevirt_spec": {
                         "expected": LM_CUST_DEFAULT_PM,
@@ -267,11 +280,11 @@ class TestOperatorsModify:
                 id="Test_Modify_HCO_CR_liveMigrationConfig_parallelMigrationsPerCluster",
             ),
             pytest.param(
-                {"patch": {"spec": {LIVE_MIGRATION_CONFIG_KEY: LM_PO_DEFAULT}}},
+                {"patch": {"spec": {VIRTUALIZATION_KEY: {LIVE_MIGRATION_CONFIG_KEY: LM_PO_DEFAULT}}}},
                 {
                     "hco_spec": {
                         "expected": LM_CUST_DEFAULT_PO,
-                        "base_path": LIVE_MIGRATION_CONFIG_KEY,
+                        "base_path": [VIRTUALIZATION_KEY, LIVE_MIGRATION_CONFIG_KEY],
                     },
                     "kubevirt_spec": {
                         "expected": LM_CUST_DEFAULT_PO,
@@ -290,8 +303,10 @@ class TestOperatorsModify:
                 {
                     "patch": {
                         "spec": {
-                            LIVE_MIGRATION_CONFIG_KEY: {
-                                PROGRESS_TIMEOUT_KEY: LM_PROGRESSTIMEOUT_DEFAULT,
+                            VIRTUALIZATION_KEY: {
+                                LIVE_MIGRATION_CONFIG_KEY: {
+                                    PROGRESS_TIMEOUT_KEY: LM_PROGRESSTIMEOUT_DEFAULT,
+                                }
                             }
                         }
                     }
@@ -299,7 +314,7 @@ class TestOperatorsModify:
                 {
                     "hco_spec": {
                         "expected": LM_CUST_DEFAULT_PT,
-                        "base_path": LIVE_MIGRATION_CONFIG_KEY,
+                        "base_path": [VIRTUALIZATION_KEY, LIVE_MIGRATION_CONFIG_KEY],
                     },
                     "kubevirt_spec": {
                         "expected": LM_CUST_DEFAULT_PT,

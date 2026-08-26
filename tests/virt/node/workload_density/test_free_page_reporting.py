@@ -3,6 +3,7 @@ from ocp_resources.kubevirt import KubeVirt
 from ocp_resources.resource import ResourceEditor
 
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import VIRTUAL_MACHINE_OPTIONS_KEY, VIRTUALIZATION_KEY
 from utilities.virt import (
     VirtualMachineForTests,
     fedora_vm_body,
@@ -76,7 +77,7 @@ def disabled_free_page_reporting_in_hco_cr(
         admin_client=admin_client,
         patches={
             hyperconverged_resource_scope_function: {
-                "spec": {"virtualMachineOptions": {"disableFreePageReporting": True}}
+                "spec": {VIRTUALIZATION_KEY: {VIRTUAL_MACHINE_OPTIONS_KEY: {"disableFreePageReporting": True}}}
             }
         },
         list_resource_reconcile=[KubeVirt],
@@ -103,9 +104,9 @@ class TestFreePageReporting:
     def test_free_page_reporting_enabled_by_default(
         self, admin_client, free_page_reporting_vm, hyperconverged_resource_scope_function
     ):
-        assert not hyperconverged_resource_scope_function.instance.to_dict()["spec"]["virtualMachineOptions"][
-            "disableFreePageReporting"
-        ]
+        assert not hyperconverged_resource_scope_function.instance.to_dict()["spec"][VIRTUALIZATION_KEY][
+            VIRTUAL_MACHINE_OPTIONS_KEY
+        ]["disableFreePageReporting"]
         assert_vmi_free_page_reporting(
             vm=free_page_reporting_vm,
             expected_free_page_reporting="on",

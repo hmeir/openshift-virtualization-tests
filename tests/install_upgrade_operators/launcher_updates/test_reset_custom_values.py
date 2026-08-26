@@ -9,6 +9,7 @@ from tests.install_upgrade_operators.launcher_updates.constants import (
 )
 from tests.install_upgrade_operators.utils import wait_for_spec_change
 from utilities.hco import get_hco_spec
+from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.virt import get_hyperconverged_kubevirt
 
 pytestmark = [pytest.mark.sno, pytest.mark.arm64, pytest.mark.s390x]
@@ -20,14 +21,18 @@ class TestLauncherUpdateResetFields:
         [
             pytest.param(
                 {
-                    "patch": {"spec": {WORKLOAD_UPDATE_STRATEGY_KEY_NAME: None}},
+                    "patch": {"spec": {VIRTUALIZATION_KEY: {WORKLOAD_UPDATE_STRATEGY_KEY_NAME: None}}},
                 },
                 DEFAULT_WORKLOAD_UPDATE_STRATEGY,
                 marks=(pytest.mark.polarion("CNV-6928"),),
             ),
             pytest.param(
                 {
-                    "patch": {"spec": {WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {"batchEvictionInterval": None}}},
+                    "patch": {
+                        "spec": {
+                            VIRTUALIZATION_KEY: {WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {"batchEvictionInterval": None}}
+                        }
+                    },
                 },
                 MOD_CUST_DEFAULT_BATCH_EVICTION_INTERVAL,
                 marks=pytest.mark.polarion("CNV-6929"),
@@ -35,7 +40,9 @@ class TestLauncherUpdateResetFields:
             ),
             pytest.param(
                 {
-                    "patch": {"spec": {WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {"batchEvictionSize": None}}},
+                    "patch": {
+                        "spec": {VIRTUALIZATION_KEY: {WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {"batchEvictionSize": None}}}
+                    },
                 },
                 MOD_CUST_DEFAULT_BATCH_EVICTION_SIZE,
                 marks=pytest.mark.polarion("CNV-6930"),
@@ -43,7 +50,9 @@ class TestLauncherUpdateResetFields:
             ),
             pytest.param(
                 {
-                    "patch": {"spec": {WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {WORKLOADUPDATEMETHODS: None}}},
+                    "patch": {
+                        "spec": {VIRTUALIZATION_KEY: {WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {WORKLOADUPDATEMETHODS: None}}}
+                    },
                 },
                 MOD_CUST_DEFAULT_WORKLOAD_UPDATE_METHOD,
                 marks=pytest.mark.polarion("CNV-6931"),
@@ -63,7 +72,7 @@ class TestLauncherUpdateResetFields:
         wait_for_spec_change(
             expected=expected,
             get_spec_func=lambda: get_hco_spec(admin_client=admin_client, hco_namespace=hco_namespace),
-            base_path=[WORKLOAD_UPDATE_STRATEGY_KEY_NAME],
+            base_path=[VIRTUALIZATION_KEY, WORKLOAD_UPDATE_STRATEGY_KEY_NAME],
         )
         wait_for_spec_change(
             expected=expected,

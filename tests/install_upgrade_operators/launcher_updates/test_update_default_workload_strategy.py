@@ -12,6 +12,7 @@ from tests.install_upgrade_operators.launcher_updates.constants import (
 )
 from tests.install_upgrade_operators.utils import wait_for_spec_change
 from utilities.hco import get_hco_spec
+from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.virt import get_hyperconverged_kubevirt
 
 pytestmark = [pytest.mark.sno, pytest.mark.arm64, pytest.mark.s390x]
@@ -25,8 +26,10 @@ class TestLauncherUpdateModifyDefault:
                 {
                     "patch": {
                         "spec": {
-                            WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {
-                                "batchEvictionInterval": DEFAULT_BATCH_EVICTION_INTERVAL
+                            VIRTUALIZATION_KEY: {
+                                WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {
+                                    "batchEvictionInterval": DEFAULT_BATCH_EVICTION_INTERVAL
+                                }
                             }
                         }
                     },
@@ -38,7 +41,11 @@ class TestLauncherUpdateModifyDefault:
             pytest.param(
                 {
                     "patch": {
-                        "spec": {WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {"batchEvictionSize": DEFAULT_BATCH_EVICTION_SIZE}}
+                        "spec": {
+                            VIRTUALIZATION_KEY: {
+                                WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {"batchEvictionSize": DEFAULT_BATCH_EVICTION_SIZE}
+                            }
+                        }
                     },
                 },
                 MOD_CUST_DEFAULT_BATCH_EVICTION_SIZE,
@@ -49,7 +56,11 @@ class TestLauncherUpdateModifyDefault:
                 {
                     "patch": {
                         "spec": {
-                            WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {WORKLOADUPDATEMETHODS: DEFAULT_WORKLOAD_UPDATE_METHODS}
+                            VIRTUALIZATION_KEY: {
+                                WORKLOAD_UPDATE_STRATEGY_KEY_NAME: {
+                                    WORKLOADUPDATEMETHODS: DEFAULT_WORKLOAD_UPDATE_METHODS
+                                }
+                            }
                         }
                     },
                 },
@@ -72,7 +83,7 @@ class TestLauncherUpdateModifyDefault:
         wait_for_spec_change(
             expected=expected,
             get_spec_func=lambda: get_hco_spec(admin_client=admin_client, hco_namespace=hco_namespace),
-            base_path=[WORKLOAD_UPDATE_STRATEGY_KEY_NAME],
+            base_path=[VIRTUALIZATION_KEY, WORKLOAD_UPDATE_STRATEGY_KEY_NAME],
         )
         wait_for_spec_change(
             expected=expected,
@@ -91,7 +102,7 @@ class TestLauncherUpdateModifyDefault:
                 {
                     "patch": {
                         "spec": {
-                            WORKLOAD_UPDATE_STRATEGY_KEY_NAME: DEFAULT_WORKLOAD_UPDATE_STRATEGY,
+                            VIRTUALIZATION_KEY: {WORKLOAD_UPDATE_STRATEGY_KEY_NAME: DEFAULT_WORKLOAD_UPDATE_STRATEGY},
                         }
                     },
                 },
@@ -103,7 +114,7 @@ class TestLauncherUpdateModifyDefault:
                 {
                     "patch": {
                         "spec": {
-                            WORKLOAD_UPDATE_STRATEGY_KEY_NAME: DEFAULT_WORKLOAD_UPDATE_STRATEGY,
+                            VIRTUALIZATION_KEY: {WORKLOAD_UPDATE_STRATEGY_KEY_NAME: DEFAULT_WORKLOAD_UPDATE_STRATEGY},
                         }
                     },
                 },
@@ -128,7 +139,7 @@ class TestLauncherUpdateModifyDefault:
             wait_for_spec_change(
                 expected=expected,
                 get_spec_func=lambda: get_hco_spec(admin_client=admin_client, hco_namespace=hco_namespace),
-                base_path=[WORKLOAD_UPDATE_STRATEGY_KEY_NAME],
+                base_path=[VIRTUALIZATION_KEY, WORKLOAD_UPDATE_STRATEGY_KEY_NAME],
             )
         elif resource_name == "kubevirt":
             wait_for_spec_change(

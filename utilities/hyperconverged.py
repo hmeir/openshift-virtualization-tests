@@ -29,6 +29,9 @@ if TYPE_CHECKING:
     from kubernetes.dynamic import DynamicClient
 
 # v1 spec group keys (the new v1 grouping — see hco_v1_api_field_mapping.md).
+VIRTUALIZATION_KEY = "virtualization"
+STORAGE_KEY = "storage"
+SECURITY_KEY = "security"
 DEPLOYMENT_KEY = "deployment"
 WORKLOAD_SOURCES_KEY = "workloadSources"
 NODE_PLACEMENTS_KEY = "nodePlacements"
@@ -36,6 +39,16 @@ INFRA_KEY = "infra"
 WORKLOAD_KEY = "workload"  # singular in v1 (v1beta1 used the plural "workloads")
 APPLICATION_AWARE_CONFIG_KEY = "applicationAwareConfig"
 APPLICATION_AWARE_CONFIG_ENABLE_KEY = "enable"
+
+# Virtualization-group field keys that are RESTRUCTURED in v1 (renamed or re-parented within the
+# group). Leaf keys whose names are unchanged (e.g. liveMigrationConfig, permittedHostDevices) keep
+# their existing constants/literals at the call sites; only their "virtualization" parent is added.
+VIRTUAL_MACHINE_OPTIONS_KEY = "virtualMachineOptions"  # now holds defaultCPUModel (was a top-level field)
+OBSOLETE_CPU_MODELS_KEY = "obsoleteCPUModels"  # renamed from v1beta1 "obsoleteCPUs"; value is now a []string
+
+# Storage-group field keys restructured in v1.
+# renamed from v1beta1 spec.resourceRequirements.storageWorkloads (the resourceRequirements wrapper is dropped).
+WORKLOAD_RESOURCE_REQUIREMENTS_KEY = "workloadResourceRequirements"
 
 # Feature-gate serialization (v1 list format) and lifecycle phase names.
 FEATURE_GATE_ENABLED_STATE = "Enabled"

@@ -24,6 +24,7 @@ from tests.virt.node.gpu.utils import (
 from tests.virt.utils import patch_hco_cr_with_mdev_permitted_hostdevices
 from utilities.constants.hco import DISABLE_MDEV_CONFIGURATION, FEATURE_GATES
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.infra import label_nodes
 
 LOGGER = logging.getLogger(__name__)
@@ -66,20 +67,22 @@ def hco_cr_with_node_specific_vgpu_permitted_hostdevices(
         patches={
             hyperconverged_resource_scope_class: {
                 "spec": {
-                    "permittedHostDevices": {
-                        "mediatedDevices": [
-                            {
-                                "externalResourceProvider": True,
-                                "mdevNameSelector": supported_gpu_device[MDEV_NAME_STR],
-                                "resourceName": supported_gpu_device[VGPU_DEVICE_NAME_STR],
-                            },
-                            {
-                                "externalResourceProvider": True,
-                                "mdevNameSelector": supported_gpu_device[MDEV_GRID_NAME_STR],
-                                "resourceName": supported_gpu_device[VGPU_GRID_NAME_STR],
-                            },
-                        ]
-                    },
+                    VIRTUALIZATION_KEY: {
+                        "permittedHostDevices": {
+                            "mediatedDevices": [
+                                {
+                                    "externalResourceProvider": True,
+                                    "mdevNameSelector": supported_gpu_device[MDEV_NAME_STR],
+                                    "resourceName": supported_gpu_device[VGPU_DEVICE_NAME_STR],
+                                },
+                                {
+                                    "externalResourceProvider": True,
+                                    "mdevNameSelector": supported_gpu_device[MDEV_GRID_NAME_STR],
+                                    "resourceName": supported_gpu_device[VGPU_GRID_NAME_STR],
+                                },
+                            ]
+                        },
+                    }
                 }
             }
         },

@@ -12,6 +12,7 @@ from utilities import console
 from utilities.constants.components import VIRT_HANDLER
 from utilities.constants.timeouts import TIMEOUT_3MIN, TIMEOUT_5SEC
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.infra import get_daemonset_by_name
 from utilities.virt import VirtualMachineForTests, migrate_vm_and_verify, wait_for_virt_handler_pods_network_updated
 
@@ -53,7 +54,7 @@ def configure_hco_live_migration_network(
     )
 
     with ResourceEditorValidateHCOReconcile(
-        patches={hyperconverged_resource: {"spec": spec_patch}},
+        patches={hyperconverged_resource: {"spec": {VIRTUALIZATION_KEY: spec_patch}}},
         list_resource_reconcile=[KubeVirt],
         wait_for_reconcile_post_update=True,
         admin_client=client,

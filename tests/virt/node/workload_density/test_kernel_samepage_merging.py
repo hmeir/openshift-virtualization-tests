@@ -14,6 +14,7 @@ from utilities.constants.timeouts import (
     TIMEOUT_30SEC,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.infra import ExecCommandOnPod, label_nodes
 from utilities.virt import migrate_vm_and_verify, running_vm
 
@@ -104,7 +105,11 @@ def ksm_enabled_in_hco(admin_client, hyperconverged_resource_scope_class):
         admin_client=admin_client,
         patches={
             hyperconverged_resource_scope_class: {
-                "spec": {"ksmConfiguration": {"nodeLabelSelector": {"matchLabels": KERNEL_SAMEPAGE_MERGING_TEST_LABEL}}}
+                "spec": {
+                    VIRTUALIZATION_KEY: {
+                        "ksmConfiguration": {"nodeLabelSelector": {"matchLabels": KERNEL_SAMEPAGE_MERGING_TEST_LABEL}}
+                    }
+                }
             }
         },
         list_resource_reconcile=[KubeVirt],

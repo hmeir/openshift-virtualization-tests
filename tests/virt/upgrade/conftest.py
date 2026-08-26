@@ -29,6 +29,7 @@ from utilities.constants.timeouts import (
 )
 from utilities.constants.virt import ES_LIVE_MIGRATE_IF_POSSIBLE
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.infra import create_ns, get_csv_by_name
 from utilities.storage import (
     create_dv,
@@ -367,7 +368,9 @@ def parallel_live_migrations_increased(admin_client, hyperconverged_resource_sco
         patches={
             hyperconverged_resource_scope_session: {
                 "spec": {
-                    "liveMigrationConfig": {"parallelOutboundMigrationsPerNode": 5},
+                    VIRTUALIZATION_KEY: {
+                        "liveMigrationConfig": {"parallelOutboundMigrationsPerNode": 5},
+                    }
                 }
             }
         },
