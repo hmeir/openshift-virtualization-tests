@@ -15,6 +15,7 @@ from utilities.constants.virt import (
     LIVE_MIGRATE,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.virt import (
     check_migration_process_after_node_drain,
     drain_node,
@@ -68,7 +69,7 @@ def hco_cr_with_evictionstrategy_none(
 ):
     with ResourceEditorValidateHCOReconcile(
         admin_client=admin_client,
-        patches={hyperconverged_resource_scope_function: {"spec": {EVICTIONSTRATEGY: "None"}}},
+        patches={hyperconverged_resource_scope_function: {"spec": {VIRTUALIZATION_KEY: {EVICTIONSTRATEGY: "None"}}}},
         list_resource_reconcile=[KubeVirt],
         wait_for_reconcile_post_update=True,
     ):

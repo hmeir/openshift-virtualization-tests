@@ -22,6 +22,7 @@ from utilities.constants.timeouts import (
 )
 from utilities.constants.virt import KERNEL_DRIVER
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.infra import label_nodes
 from utilities.virt import get_nodes_gpu_info
 
@@ -84,13 +85,15 @@ def hco_cr_with_permitted_hostdevices(admin_client, hyperconverged_resource_scop
         patches={
             hyperconverged_resource_scope_class: {
                 "spec": {
-                    "permittedHostDevices": {
-                        "pciHostDevices": [
-                            {
-                                "pciDeviceSelector": supported_gpu_device[DEVICE_ID_STR],
-                                "resourceName": supported_gpu_device[GPU_DEVICE_NAME_STR],
-                            }
-                        ]
+                    VIRTUALIZATION_KEY: {
+                        "permittedHostDevices": {
+                            "pciHostDevices": [
+                                {
+                                    "pciDeviceSelector": supported_gpu_device[DEVICE_ID_STR],
+                                    "resourceName": supported_gpu_device[GPU_DEVICE_NAME_STR],
+                                }
+                            ]
+                        }
                     }
                 }
             }

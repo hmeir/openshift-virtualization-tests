@@ -4,6 +4,7 @@ from ocp_resources.kubevirt import KubeVirt
 from ocp_resources.limit_range import LimitRange
 
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.virt import VirtualMachineForTests, fedora_vm_body, running_vm
 
 CPU_CORES = 3
@@ -41,7 +42,7 @@ def vmi_cpu_allocation_from_kubevirt(kubevirt_config):
 def vmi_cpu_allocation_ratio_from_hco_post_update(
     hyperconverged_resource_scope_function,
 ):
-    return hyperconverged_resource_scope_function.instance.to_dict()["spec"]["resourceRequirements"][
+    return hyperconverged_resource_scope_function.instance.to_dict()["spec"][VIRTUALIZATION_KEY][
         "vmiCPUAllocationRatio"
     ]
 
@@ -55,7 +56,7 @@ def hco_cr_with_vmi_cpu_allocation_ratio(
         admin_client=admin_client,
         patches={
             hyperconverged_resource_scope_function: {
-                "spec": {"resourceRequirements": {"vmiCPUAllocationRatio": VMI_CPU_ALLOCATION_RATIO}}
+                "spec": {VIRTUALIZATION_KEY: {"vmiCPUAllocationRatio": VMI_CPU_ALLOCATION_RATIO}}
             }
         },
         list_resource_reconcile=[KubeVirt],

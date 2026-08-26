@@ -25,6 +25,7 @@ from utilities.constants.networking import LINUX_BRIDGE
 from utilities.constants.timeouts import TIMEOUT_40MIN
 from utilities.exceptions import MissingResourceException
 from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hyperconverged import VIRTUAL_MACHINE_OPTIONS_KEY, VIRTUALIZATION_KEY
 from utilities.infra import (
     create_ns,
     get_node_selector_dict,
@@ -639,12 +640,12 @@ def must_gather_vm_files_path(collected_vm_details_must_gather, vm_for_migration
 
 @pytest.fixture(scope="class")
 def updated_disable_serial_console_log_false(admin_client, hyperconverged_resource_scope_class):
-    if hyperconverged_resource_scope_class.instance.spec.virtualMachineOptions.disableSerialConsoleLog:
+    if hyperconverged_resource_scope_class.instance.spec.virtualization.virtualMachineOptions.disableSerialConsoleLog:
         with ResourceEditorValidateHCOReconcile(
             admin_client=admin_client,
             patches={
                 hyperconverged_resource_scope_class: {
-                    "spec": {"virtualMachineOptions": {"disableSerialConsoleLog": False}}
+                    "spec": {VIRTUALIZATION_KEY: {VIRTUAL_MACHINE_OPTIONS_KEY: {"disableSerialConsoleLog": False}}}
                 }
             },
         ):

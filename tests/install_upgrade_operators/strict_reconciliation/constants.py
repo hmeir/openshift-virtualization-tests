@@ -15,6 +15,7 @@ from tests.install_upgrade_operators.constants import (
     HCO_CR_CERT_CONFIG_RENEW_BEFORE_KEY,
     HCO_CR_CERT_CONFIG_SERVER_KEY,
 )
+from utilities.hyperconverged import SECURITY_KEY, VIRTUALIZATION_KEY
 
 DEPLOY_KUBE_SECONDARY_DNS = "deployKubeSecondaryDNS"
 CERTC_DEFAULT_48H = "48h0m0s"
@@ -124,8 +125,8 @@ EXPCT_CERTC_CUSTOM = {
 
 CUSTOM_HCO_CR_SPEC = {
     "spec": {
-        LIVE_MIGRATION_CONFIG_KEY: EXPCT_LM_CUSTOM,
-        HCO_CR_CERT_CONFIG_KEY: EXPCT_CERTC_CUSTOM,
+        VIRTUALIZATION_KEY: {LIVE_MIGRATION_CONFIG_KEY: EXPCT_LM_CUSTOM},
+        SECURITY_KEY: {HCO_CR_CERT_CONFIG_KEY: EXPCT_CERTC_CUSTOM},
     }
 }
 KUBEVIRT_DEFAULT = {KUBEVIRT_CR_CERT_CONFIG_SELF_SIGNED_KEY: EXPCT_CERTC_DEFAULTS}
@@ -202,13 +203,11 @@ STORAGE_IMPORT_VALUE = {
     ]
 }
 OBSOLETE_CPUS_KEY = "obsoleteCPUs"
-OBSOLETE_CPUS_VALUE_HCO_CR = {
-    "cpuModels": [
-        "487",
-        "pentium5",
-        "pentiumhome",
-    ],
-}
+OBSOLETE_CPUS_VALUE_HCO_CR = [
+    "487",
+    "pentium5",
+    "pentiumhome",
+]
 OBSOLETE_CPUS_VALUE_KUBEVIRT_CR = {
     "obsoleteCPUModels": {
         "487": True,
@@ -216,17 +215,17 @@ OBSOLETE_CPUS_VALUE_KUBEVIRT_CR = {
         "pentiumhome": True,
     },
 }
-RESOURCE_REQUIREMENTS = {
-    "storageWorkloads": {
-        "limits": {
-            "cpu": "888k",
-            "memory": "123Mi",
-        },
-        "requests": {
-            "cpu": "555m",
-            "memory": "1Gi",
-        },
-    }
+# v1 spec.storage.workloadResourceRequirements value (the v1beta1 spec.resourceRequirements.storageWorkloads
+# wrapper is removed in v1 — this is the bare requirements dict).
+WORKLOAD_RESOURCE_REQUIREMENTS_VALUE = {
+    "limits": {
+        "cpu": "888k",
+        "memory": "123Mi",
+    },
+    "requests": {
+        "cpu": "555m",
+        "memory": "1Gi",
+    },
 }
 
 NP_INFRA_KEY = "infra"
