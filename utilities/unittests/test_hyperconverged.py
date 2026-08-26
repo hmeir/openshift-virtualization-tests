@@ -20,55 +20,11 @@ from utilities.hyperconverged import (
 def _hco_mock(spec: dict[str, Any]) -> MagicMock:
     """A HyperConvergedV1 stand-in whose live ``instance`` returns ``spec``.
 
-    Avoids constructing a real resource (which would require cluster API discovery). ``read_spec``
-    is wired to the real implementation so methods that build on it (e.g. is_feature_gate_enabled)
-    exercise the actual logic.
+    Avoids constructing a real resource (which would require cluster API discovery).
     """
     mock_self = MagicMock(spec=HyperConvergedV1)
     mock_self.instance.to_dict.return_value = {"spec": spec}
-    mock_self.read_spec = lambda path, default=None: HyperConvergedV1.read_spec(mock_self, path=path, default=default)
     return mock_self
-
-
-class TestReadSpec:
-    """Test cases for HyperConvergedV1.read_spec"""
-
-    def test_read_spec_returns_nested_value(self):
-        """read_spec returns the value at a nested path"""
-        mock_self = _hco_mock({"deployment": {"nodePlacements": {"infra": {"nodeSelector": {"a": "b"}}}}})
-        assert HyperConvergedV1.read_spec(mock_self, path=HyperConvergedV1.SpecPath.NODE_PLACEMENT_INFRA) == {
-            "nodeSelector": {"a": "b"}
-        }
-
-    def test_read_spec_missing_segment_returns_default(self):
-        """read_spec returns the default when a path segment is absent"""
-        mock_self = _hco_mock({"deployment": {}})
-        assert (
-            HyperConvergedV1.read_spec(
-                mock_self, path=HyperConvergedV1.SpecPath.NODE_PLACEMENT_INFRA, default="fallback"
-            )
-            == "fallback"
-        )
-
-    def test_read_spec_non_dict_segment_returns_default(self):
-        """read_spec returns the default when an intermediate node is not a dict"""
-        mock_self = _hco_mock({"deployment": "not-a-dict"})
-        assert HyperConvergedV1.read_spec(mock_self, path=HyperConvergedV1.SpecPath.NODE_PLACEMENT_INFRA) is None
-
-
-class TestSpecPatch:
-    """Test cases for HyperConvergedV1.spec_patch"""
-
-    def test_spec_patch_single_key(self):
-        """spec_patch wraps a value under a single-key path"""
-        assert HyperConvergedV1.spec_patch(path=("featureGates",), value=[]) == {"spec": {"featureGates": []}}
-
-    def test_spec_patch_nested_path(self):
-        """spec_patch builds the full nested structure for a multi-key path"""
-        assert HyperConvergedV1.spec_patch(
-            path=HyperConvergedV1.SpecPath.APPLICATION_AWARE_CONFIG,
-            value={"enable": True},
-        ) == {"spec": {"deployment": {"applicationAwareConfig": {"enable": True}}}}
 
 
 class TestFeatureGatesPatch:
