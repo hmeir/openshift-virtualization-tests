@@ -12,8 +12,8 @@ from ocp_resources.persistent_volume_claim import PersistentVolumeClaim
 
 from tests.utils import create_cirros_vm
 from utilities.constants import Images
+from utilities.constants.hco import STORAGE_KEY
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import STORAGE_KEY
 from utilities.storage import virtctl_upload_dv
 
 FS_OVERHEAD_20 = 0.2

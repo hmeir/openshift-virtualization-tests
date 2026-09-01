@@ -22,9 +22,8 @@ from tests.virt.node.gpu.utils import (
     wait_for_nvidia_vgpu_manager,
 )
 from tests.virt.utils import patch_hco_cr_with_mdev_permitted_hostdevices
-from utilities.constants.hco import DISABLE_MDEV_CONFIGURATION
-from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import VIRTUALIZATION_KEY
+from utilities.constants.hco import DISABLE_MDEV_CONFIGURATION, VIRTUALIZATION_KEY
+from utilities.hco import ResourceEditorValidateHCOReconcile, set_hco_feature_gates
 from utilities.infra import label_nodes
 
 LOGGER = logging.getLogger(__name__)
@@ -101,15 +100,10 @@ def hco_with_disable_mdev_configuration(admin_client, hyperconverged_resource_sc
     does not configure mediated devices (vGPU configuration is handled
     by NVIDIA GPU Operator).
     """
-    with ResourceEditorValidateHCOReconcile(
+    with set_hco_feature_gates(
         admin_client=admin_client,
-        patches={
-            hyperconverged_resource_scope_session: hyperconverged_resource_scope_session.feature_gates_patch(**{
-                DISABLE_MDEV_CONFIGURATION: True
-            })
-        },
-        list_resource_reconcile=[KubeVirt],
-        wait_for_reconcile_post_update=True,
+        hco_resource=hyperconverged_resource_scope_session,
+        enable=[DISABLE_MDEV_CONFIGURATION],
     ):
         yield
 

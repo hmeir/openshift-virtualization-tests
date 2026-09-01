@@ -12,8 +12,8 @@ from tests.install_upgrade_operators.hco_enablement_golden_image_updates.multiar
     MULTIARCH_MANAGED_CRS,
 )
 from utilities.constants.cluster import KUBERNETES_ARCH_LABEL
+from utilities.constants.hco import DEPLOYMENT_KEY, NODE_PLACEMENTS_KEY, WORKLOAD_KEY, WORKLOAD_SOURCES_KEY
 from utilities.hco import ResourceEditorValidateHCOReconcile, update_hco_templates_spec
-from utilities.hyperconverged import DEPLOYMENT_KEY, NODE_PLACEMENTS_KEY, WORKLOAD_KEY, WORKLOAD_SOURCES_KEY
 from utilities.virt import get_hyperconverged_kubevirt
 
 LOGGER = logging.getLogger(__name__)

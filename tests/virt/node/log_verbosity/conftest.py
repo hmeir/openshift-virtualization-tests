@@ -4,8 +4,8 @@ from ocp_resources.kubevirt import KubeVirt
 from tests.virt.node.log_verbosity.constants import (
     VIRT_LOG_VERBOSITY_LEVEL_6,
 )
+from utilities.constants.hco import DEPLOYMENT_KEY
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import DEPLOYMENT_KEY
 
 
 @pytest.fixture(scope="class")

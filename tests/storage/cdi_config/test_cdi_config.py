@@ -7,8 +7,8 @@ from timeout_sampler import TimeoutSampler
 
 from tests.storage.utils import LOGGER
 from utilities.constants.components import CDI_UPLOADPROXY
+from utilities.constants.hco import STORAGE_KEY, WORKLOAD_RESOURCE_REQUIREMENTS_KEY
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import STORAGE_KEY, WORKLOAD_RESOURCE_REQUIREMENTS_KEY
 
 pytestmark = pytest.mark.post_upgrade
 

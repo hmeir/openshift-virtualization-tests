@@ -258,19 +258,24 @@ restructured into hierarchical groups. The full v1beta1→v1 field mapping is in
   prunes unknown flat fields, so a write like `{"spec": {"liveMigrationConfig": ...}}`
   becomes a no-op. Nest it under its v1 group:
   `{"spec": {VIRTUALIZATION_KEY: {"liveMigrationConfig": ...}}}`.
-- ✅ **Use the group-key constants** exported from `utilities/hyperconverged.py`
+- ✅ **Use the group-key constants** from `utilities/constants/hco.py`
   (`VIRTUALIZATION_KEY`, `STORAGE_KEY`, `SECURITY_KEY`, `DEPLOYMENT_KEY`,
   `WORKLOAD_SOURCES_KEY`, `NETWORKING_KEY`, plus restructured leaf keys like
   `NODE_PLACEMENTS_KEY`, `WORKLOAD_KEY`, `OBSOLETE_CPU_MODELS_KEY`) as the single
   source of truth for the v1 names. Writes and reads use the plain repo idiom
   directly at the call site — inline `{"spec": {GROUP_KEY: {field: value}}}` patch
-  dicts and `instance.spec.<group>.<field>` /
-  `instance.to_dict()["spec"].get(GROUP_KEY, {}).get(field)` reads.
+  dicts and `instance.spec.<group>.<field>` reads (drop `to_dict()`; the
+  `ResourceField` supports attribute and `.get()` access — only use `to_dict()` when
+  a plain-dict snapshot is needed, e.g. a dict comparison).
+- The HCO CR is the base `HyperConverged` class (already v1-shaped); there is **no**
+  `HyperConvergedV1` subclass. HCO helpers are free functions in `utilities/hco.py`.
 - **Feature gates** on the HCO CR are a v1 **list** `[{name, state}]` (state omitted
-  = Enabled), not a `{name: bool}` dict. Write with
-  `hco.feature_gates_patch(**gates)` and read with
-  `hco.is_feature_gate_enabled(name=..., fg_phases=...)` (`fg_phases` from the
-  `hco_fg_phases` session fixture). Never mutate `spec.featureGates` as a dict.
+  = Enabled), not a `{name: bool}` dict. For standalone changes use
+  `set_hco_feature_gates(admin_client=..., hco_resource=..., enable=[...], disable=[...])`
+  (a safe read-modify-write context manager that preserves existing gates); build a
+  fragment for a larger patch with `feature_gates_patch(**gates)`; read with
+  `is_feature_gate_enabled(hco_resource=..., name=..., fg_phases=...)` (`fg_phases`
+  from the `hco_fg_phases` session fixture). Never mutate `spec.featureGates` as a dict.
 - **Only HyperConverged CR sites change.** KubeVirt, CDI, CNAO, SSP, APIServer,
   HostPathProvisioner and VM/VMI/Template specs reuse many of the same field names
   and are UNCHANGED — do not add group wrappers to operand sites. HCO `status`

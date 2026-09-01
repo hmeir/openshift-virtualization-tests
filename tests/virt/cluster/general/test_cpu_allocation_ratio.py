@@ -3,8 +3,8 @@ from kubernetes.dynamic import DynamicClient
 from ocp_resources.kubevirt import KubeVirt
 from ocp_resources.limit_range import LimitRange
 
+from utilities.constants.hco import VIRTUALIZATION_KEY
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.virt import VirtualMachineForTests, fedora_vm_body, running_vm
 
 CPU_CORES = 3

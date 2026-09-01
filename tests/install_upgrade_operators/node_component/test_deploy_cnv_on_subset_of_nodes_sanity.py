@@ -20,8 +20,8 @@ from tests.install_upgrade_operators.node_component.utils import (
     verify_all_components_on_node,
     verify_no_components_on_nodes,
 )
+from utilities.constants.hco import DEPLOYMENT_KEY, NODE_PLACEMENTS_KEY, WORKLOAD_KEY
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import DEPLOYMENT_KEY, NODE_PLACEMENTS_KEY, WORKLOAD_KEY
 
 pytestmark = [pytest.mark.post_upgrade, pytest.mark.gating, pytest.mark.arm64, pytest.mark.s390x]
 

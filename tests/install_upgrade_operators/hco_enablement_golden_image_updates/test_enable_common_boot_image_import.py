@@ -6,9 +6,9 @@ from utilities.constants.hco import (
     COMMON_TEMPLATES_KEY_NAME,
     ENABLE_COMMON_BOOT_IMAGE_IMPORT,
     SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME,
+    WORKLOAD_SOURCES_KEY,
 )
 from utilities.hco import wait_for_auto_boot_config_stabilization
-from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 
 pytestmark = [pytest.mark.gating, pytest.mark.arm64, pytest.mark.s390x]
 

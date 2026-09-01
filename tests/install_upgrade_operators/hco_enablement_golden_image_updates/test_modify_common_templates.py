@@ -17,11 +17,11 @@ from tests.install_upgrade_operators.hco_enablement_golden_image_updates.utils i
 from utilities.constants.hco import (
     DATA_IMPORT_CRON_ENABLE,
     SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME,
+    WORKLOAD_SOURCES_KEY,
 )
 from utilities.constants.pytest import QUARANTINED
 from utilities.constants.storage import WILDCARD_CRON_EXPRESSION
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 
 pytestmark = [pytest.mark.gating, pytest.mark.arm64, pytest.mark.s390x]
 

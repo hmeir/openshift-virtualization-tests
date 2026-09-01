@@ -3,9 +3,8 @@ from ocp_resources.kubevirt import KubeVirt
 from ocp_resources.virtual_machine import VirtualMachine
 
 from utilities.constants.architecture import ARM_64
-from utilities.constants.hco import HCO_DEFAULT_CPU_MODEL_KEY
+from utilities.constants.hco import HCO_DEFAULT_CPU_MODEL_KEY, VIRTUAL_MACHINE_OPTIONS_KEY, VIRTUALIZATION_KEY
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import VIRTUAL_MACHINE_OPTIONS_KEY, VIRTUALIZATION_KEY
 from utilities.virt import VirtualMachineForTests, fedora_vm_body, running_vm
 
 KUBEVIRT_CPU_MODEL_KEY = "cpuModel"

@@ -5,12 +5,12 @@ from ocp_resources.kubevirt import KubeVirt
 from ocp_resources.virtual_machine import VirtualMachine
 from timeout_sampler import TimeoutSampler
 
+from utilities.constants.hco import DEPLOYMENT_KEY
 from utilities.constants.timeouts import (
     TIMEOUT_3MIN,
     TIMEOUT_4MIN,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import DEPLOYMENT_KEY
 from utilities.virt import VirtualMachineForTests, fedora_vm_body
 
 

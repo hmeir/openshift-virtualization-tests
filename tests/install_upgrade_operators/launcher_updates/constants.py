@@ -1,8 +1,8 @@
 import copy
 
 from tests.install_upgrade_operators.constants import WORKLOAD_UPDATE_STRATEGY_KEY_NAME, WORKLOADUPDATEMETHODS
+from utilities.constants.hco import VIRTUALIZATION_KEY
 from utilities.constants.virt import LIVE_MIGRATE
-from utilities.hyperconverged import VIRTUALIZATION_KEY
 
 DEFAULT_BATCH_EVICTION_INTERVAL = "1m0s"
 DEFAULT_BATCH_EVICTION_SIZE = 10

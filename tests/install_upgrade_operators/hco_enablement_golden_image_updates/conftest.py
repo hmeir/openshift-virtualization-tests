@@ -20,9 +20,9 @@ from utilities.constants.components import HCO_OPERATOR
 from utilities.constants.hco import (
     COMMON_TEMPLATES_KEY_NAME,
     SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME,
+    WORKLOAD_SOURCES_KEY,
 )
 from utilities.hco import disable_common_boot_image_import_hco_spec
-from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 from utilities.ssp import get_ssp_resource
 
 

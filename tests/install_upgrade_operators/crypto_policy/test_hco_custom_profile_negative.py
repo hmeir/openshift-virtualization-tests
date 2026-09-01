@@ -9,11 +9,11 @@ from tests.install_upgrade_operators.crypto_policy.constants import (
     TLS_CUSTOM_PROFILE,
 )
 from utilities.constants.hco import (
+    SECURITY_KEY,
     TLS_CUSTOM_POLICY,
     TLS_SECURITY_PROFILE,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import SECURITY_KEY
 
 LOGGER = logging.getLogger(__name__)
 pytestmark = pytest.mark.s390x

@@ -18,8 +18,8 @@ from tests.install_upgrade_operators.launcher_updates.constants import (
     MOD_DEFAULT_WORKLOAD_UPDATE_METHOD_EMPTY,
 )
 from tests.install_upgrade_operators.utils import wait_for_spec_change
+from utilities.constants.hco import VIRTUALIZATION_KEY
 from utilities.hco import get_hco_spec
-from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.virt import get_hyperconverged_kubevirt
 
 pytestmark = [pytest.mark.sno, pytest.mark.arm64, pytest.mark.s390x]

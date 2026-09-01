@@ -1,11 +1,13 @@
 import json
 import logging
+import re
 from collections.abc import Collection, Iterator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from kubernetes.dynamic.exceptions import NotFoundError, ResourceNotFoundError
 from ocp_resources.cdi import CDI
+from ocp_resources.custom_resource_definition import CustomResourceDefinition
 from ocp_resources.data_source import DataSource
 from ocp_resources.hyperconverged import HyperConverged
 from ocp_resources.kubevirt import KubeVirt
@@ -18,12 +20,25 @@ from timeout_sampler import TimeoutExpiredError, TimeoutSampler
 
 import utilities.infra
 from utilities.constants.hco import (
+    APPLICATION_AWARE_CONFIG_ENABLE_KEY,
+    APPLICATION_AWARE_CONFIG_KEY,
     DEFAULT_HCO_CONDITIONS,
+    DEPLOYMENT_KEY,
     ENABLE_COMMON_BOOT_IMAGE_IMPORT,
     EXPECTED_STATUS_CONDITIONS,
+    FEATURE_GATE_DISABLED_STATE,
+    FEATURE_GATE_ENABLED_STATE,
+    FEATURE_GATE_PHASE_ALPHA,
+    FEATURE_GATE_PHASE_BETA,
+    FEATURE_GATES,
     HCO_SUBSCRIPTION,
+    HYPERCONVERGED_CRD_NAME,
     IMAGE_CRON_STR,
+    INFRA_KEY,
+    NODE_PLACEMENTS_KEY,
     SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME,
+    WORKLOAD_KEY,
+    WORKLOAD_SOURCES_KEY,
 )
 from utilities.constants.storage import StorageClassNames
 from utilities.constants.timeouts import (
@@ -33,16 +48,6 @@ from utilities.constants.timeouts import (
     TIMEOUT_5SEC,
     TIMEOUT_10MIN,
     TIMEOUT_30MIN,
-)
-from utilities.hyperconverged import (
-    APPLICATION_AWARE_CONFIG_ENABLE_KEY,
-    APPLICATION_AWARE_CONFIG_KEY,
-    DEPLOYMENT_KEY,
-    INFRA_KEY,
-    NODE_PLACEMENTS_KEY,
-    WORKLOAD_KEY,
-    WORKLOAD_SOURCES_KEY,
-    HyperConvergedV1,
 )
 from utilities.ssp import (
     wait_for_at_least_one_auto_update_data_import_cron,
@@ -56,6 +61,12 @@ if TYPE_CHECKING:
     from ocp_resources.data_import_cron import DataImportCron
 
 LOGGER = logging.getLogger(__name__)
+
+# The featureGates CRD description opens with a phase-legend preamble ("* alpha: ...", "* beta: ...")
+# before this header, then lists the gates. Everything after the header is the gate list.
+_FG_LIST_HEADER = "Feature-Gate list:"
+# Matches "* gateName: <text> Phase: <Phase>" bullet entries in the gate list.
+_FG_PHASE_RE = re.compile(r"\*\s+(\w+):\s.*?Phase:\s+(\w+)", re.DOTALL)
 
 DEFAULT_HCO_PROGRESSING_CONDITIONS = {
     Resource.Condition.PROGRESSING: Resource.Condition.Status.TRUE,
@@ -114,6 +125,148 @@ class ResourceEditorValidateHCOReconcile(ResourceEditor):
             consecutive_checks_count=self._consecutive_checks_count,
             list_dependent_crs_to_check=self.list_resource_reconcile,
         )
+
+
+def feature_gates_patch(**gates: bool) -> dict[str, Any]:
+    """Build a merge-patch dict for ``spec.featureGates`` from ``name=enabled`` kwargs.
+
+    A merge patch replaces the whole list, so pass every gate that must be present in one call. An
+    enabled gate omits ``state`` (Enabled is the default); a disabled gate sets it explicitly.
+
+    For standalone gate changes prefer :func:`set_hco_feature_gates`, which reads-modifies-writes so
+    it does not drop pre-existing gates. Use this builder when composing the feature-gate fragment
+    into a larger spec patch.
+
+    Args:
+        **gates: Mapping of gate name to desired enabled state.
+
+    Returns:
+        A ``{"spec": {"featureGates": [...]}}`` dict for ``ResourceEditorValidateHCOReconcile``.
+    """
+    return {
+        "spec": {
+            FEATURE_GATES: [
+                {"name": name} if enabled else {"name": name, "state": FEATURE_GATE_DISABLED_STATE}
+                for name, enabled in gates.items()
+            ]
+        }
+    }
+
+
+@contextmanager
+def set_hco_feature_gates(
+    admin_client: DynamicClient,
+    hco_resource: HyperConverged,
+    enable: list[str] | None = None,
+    disable: list[str] | None = None,
+    list_resource_reconcile: list[type[Resource]] | None = None,
+) -> Iterator[None]:
+    """Safely set feature gates on the HCO CR, preserving existing entries, reverting on exit.
+
+    v1 ``spec.featureGates`` is a list and a merge patch REPLACES it, so setting one gate with a
+    bare patch would wipe the others. This reads the current list, merges the requested
+    enable/disable deltas into it, and writes the full merged list. On exit the resource editor
+    restores the original list — which REMOVES the entries added here rather than writing their
+    defaults (writing a default would leave a pinned entry behind; see
+    ``docs/featuregates/HCO_V1_BEHAVIOR_EXPLAINED.md`` §5/§8).
+
+    Args:
+        admin_client: Cluster admin dynamic client.
+        hco_resource: The HyperConverged resource to patch.
+        enable: Gate names to set enabled.
+        disable: Gate names to set disabled.
+        list_resource_reconcile: Operand resource kinds to wait for after the change; defaults to
+            ``[KubeVirt]`` (where feature gates propagate).
+
+    Yields:
+        None, once the merged gates are applied and HCO has reconciled.
+    """
+    deltas = {name: True for name in enable or []}
+    deltas.update({name: False for name in disable or []})
+    current = [dict(entry) for entry in hco_resource.instance.spec.get(FEATURE_GATES, [])]
+    merged = [entry for entry in current if entry["name"] not in deltas]
+    merged.extend(
+        {"name": name} if enabled else {"name": name, "state": FEATURE_GATE_DISABLED_STATE}
+        for name, enabled in deltas.items()
+    )
+    with ResourceEditorValidateHCOReconcile(
+        admin_client=admin_client,
+        patches={hco_resource: {"spec": {FEATURE_GATES: merged}}},
+        list_resource_reconcile=list_resource_reconcile or [KubeVirt],
+        wait_for_reconcile_post_update=True,
+    ):
+        yield
+
+
+def is_feature_gate_enabled(hco_resource: HyperConverged, name: str, fg_phases: dict[str, str]) -> bool:
+    """Return whether a feature gate is effectively enabled on the HCO CR.
+
+    A gate present in ``spec.featureGates`` reads its own ``state``. An absent gate sits at its
+    lifecycle-phase default (Beta = Enabled, Alpha = Disabled).
+
+    Args:
+        hco_resource: The HyperConverged resource to read.
+        name: Feature gate name.
+        fg_phases: Gate-name → lifecycle-phase map (see :func:`parse_hco_fg_phases`).
+
+    Returns:
+        ``True`` if the gate is effectively enabled.
+
+    Raises:
+        ValueError: If the gate is absent and its phase is neither Alpha nor Beta (e.g. a
+            deprecated gate that may default on). The phase heuristic cannot resolve those — read
+            the gate's dedicated spec field instead (see HCO_V1_BEHAVIOR_EXPLAINED.md §6).
+    """
+    for entry in hco_resource.instance.spec.get(FEATURE_GATES, []):
+        if entry["name"] == name:
+            return entry.get("state", FEATURE_GATE_ENABLED_STATE) == FEATURE_GATE_ENABLED_STATE
+    phase = fg_phases[name]
+    if phase not in (FEATURE_GATE_PHASE_ALPHA, FEATURE_GATE_PHASE_BETA):
+        raise ValueError(
+            f"Cannot infer the state of unset feature gate {name!r} from phase {phase!r}; "
+            f"read its dedicated spec field instead (see HCO_V1_BEHAVIOR_EXPLAINED.md §6)."
+        )
+    return phase == FEATURE_GATE_PHASE_BETA
+
+
+def parse_hco_fg_phases(admin_client: DynamicClient) -> dict[str, str]:
+    """Discover feature-gate lifecycle phases from the v1 HCO CRD.
+
+    Parses the free-text ``spec.featureGates`` description of the v1 CRD version into a
+    ``{gate_name: phase}`` map (phases lower-cased). Avoids a hand-maintained phase table, which
+    would churn every release.
+
+    Args:
+        admin_client: Cluster admin dynamic client.
+
+    Returns:
+        Mapping of feature-gate name to lifecycle phase (e.g. ``{"downwardMetrics": "alpha"}``).
+
+    Raises:
+        ValueError: If no phases are parsed (the CRD description format likely changed) — fail loud
+            rather than silently returning an empty map.
+    """
+    crd = CustomResourceDefinition(client=admin_client, name=HYPERCONVERGED_CRD_NAME)
+    versions = crd.instance.to_dict()["spec"]["versions"]
+    v1_version = next(version for version in versions if version["name"] == Resource.ApiVersion.V1)
+    description = v1_version["schema"]["openAPIV3Schema"]["properties"]["spec"]["properties"]["featureGates"].get(
+        "description", ""
+    )
+    # Drop the phase-legend preamble so its "* alpha:/beta:/GA:/deprecated:" bullets are not parsed
+    # as gates. If the header is absent (format change), fall back to the whole description and let
+    # the empty-result guard below fail loud.
+    gate_list = description.split(_FG_LIST_HEADER, 1)[-1] if _FG_LIST_HEADER in description else ""
+    phases = dict(_FG_PHASE_RE.findall(gate_list))
+    if not phases:
+        raise ValueError(
+            "Failed to parse feature gate phases from the HCO CRD; the featureGates description format may have changed"
+        )
+    return {name: phase.lower() for name, phase in phases.items()}
+
+
+def common_boot_image_import_enabled(hco_resource: HyperConverged) -> bool:
+    """Whether ``spec.workloadSources.enableCommonBootImageImport`` is enabled on the HCO CR."""
+    return hco_resource.instance.spec.get(WORKLOAD_SOURCES_KEY, {}).get(ENABLE_COMMON_BOOT_IMAGE_IMPORT)
 
 
 def wait_for_hco_conditions(
@@ -378,12 +531,12 @@ def wait_for_hco_version(client, hco_ns_name, cnv_version):
 
 def disable_common_boot_image_import_hco_spec(
     admin_client: DynamicClient,
-    hco_resource: HyperConvergedV1,
+    hco_resource: HyperConverged,
     golden_images_namespace: Namespace,
     golden_images_data_import_crons: list[DataImportCron],
     exclude_data_source_names: Collection[str] | None = None,
 ) -> Iterator[None]:
-    if hco_resource.instance.to_dict()["spec"].get(WORKLOAD_SOURCES_KEY, {}).get(ENABLE_COMMON_BOOT_IMAGE_IMPORT):
+    if common_boot_image_import_enabled(hco_resource=hco_resource):
         update_common_boot_image_import_spec(
             hco_resource=hco_resource,
             enable=False,
@@ -402,7 +555,7 @@ def disable_common_boot_image_import_hco_spec(
 
 
 def enable_common_boot_image_import_spec_wait_for_data_import_cron(
-    hco_resource: HyperConvergedV1,
+    hco_resource: HyperConverged,
     admin_client: DynamicClient,
     namespace: Namespace,
     exclude_data_source_names: Collection[str] | None = None,
@@ -430,13 +583,7 @@ def update_common_boot_image_import_spec(hco_resource, enable):
             for sample in TimeoutSampler(
                 wait_timeout=TIMEOUT_2MIN,
                 sleep=5,
-                func=lambda: (
-                    _hco_resource.instance
-                    .to_dict()["spec"]
-                    .get(WORKLOAD_SOURCES_KEY, {})
-                    .get(ENABLE_COMMON_BOOT_IMAGE_IMPORT)
-                    == _enable
-                ),
+                func=lambda: common_boot_image_import_enabled(hco_resource=_hco_resource) == _enable,
             ):
                 if sample:
                     return

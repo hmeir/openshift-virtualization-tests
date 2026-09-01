@@ -9,7 +9,7 @@ from ocp_resources.virtual_machine import VirtualMachine
 from pytest_testconfig import config as py_config
 
 from tests.install_upgrade_operators.product_uninstall.constants import BLOCK_REMOVAL_TEST_NODE_ID
-from utilities.constants.hco import DEFAULT_HCO_CONDITIONS
+from utilities.constants.hco import DEFAULT_HCO_CONDITIONS, DEPLOYMENT_KEY
 from utilities.constants.storage import CDI_SECRETS
 from utilities.constants.timeouts import TIMEOUT_10MIN
 from utilities.hco import (
@@ -17,7 +17,6 @@ from utilities.hco import (
     get_hco_version,
     wait_for_hco_conditions,
 )
-from utilities.hyperconverged import DEPLOYMENT_KEY
 from utilities.virt import VirtualMachineForTests, fedora_vm_body, running_vm
 
 BLOCK_STRATEGY = "BlockUninstallIfWorkloadsExist"

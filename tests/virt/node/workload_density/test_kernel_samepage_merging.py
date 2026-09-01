@@ -9,12 +9,12 @@ from ocp_resources.resource import Resource, ResourceEditor
 from timeout_sampler import TimeoutExpiredError, TimeoutSampler
 
 from tests.utils import create_vms
+from utilities.constants.hco import VIRTUALIZATION_KEY
 from utilities.constants.timeouts import (
     TIMEOUT_5MIN,
     TIMEOUT_30SEC,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.infra import ExecCommandOnPod, label_nodes
 from utilities.virt import migrate_vm_and_verify, running_vm
 

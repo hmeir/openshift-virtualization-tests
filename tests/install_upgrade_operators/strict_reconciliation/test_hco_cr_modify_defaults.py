@@ -51,8 +51,8 @@ from tests.install_upgrade_operators.utils import (
     get_network_addon_config,
     wait_for_spec_change,
 )
+from utilities.constants.hco import SECURITY_KEY, VIRTUALIZATION_KEY
 from utilities.hco import get_hco_spec
-from utilities.hyperconverged import SECURITY_KEY, VIRTUALIZATION_KEY
 from utilities.storage import get_hyperconverged_cdi
 from utilities.virt import get_hyperconverged_kubevirt
 

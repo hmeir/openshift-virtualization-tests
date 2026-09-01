@@ -26,10 +26,10 @@ from tests.storage.cbt.utils import (
     wait_for_push_backup_complete,
     wait_for_vm_cbt_enabled,
 )
+from utilities.constants.hco import VIRTUALIZATION_KEY
 from utilities.constants.images import OS_FLAVOR_RHEL
 from utilities.constants.instance_types import RHEL9_PREFERENCE, U1_SMALL
-from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import VIRTUALIZATION_KEY
+from utilities.hco import ResourceEditorValidateHCOReconcile, feature_gates_patch
 from utilities.storage import (
     data_volume_template_with_source_ref_dict,
     write_file_via_ssh,
@@ -52,7 +52,7 @@ def cbt_hco_configured(
         patches={
             hyperconverged_resource_scope_module: {
                 "spec": {
-                    **hyperconverged_resource_scope_module.feature_gates_patch(incrementalBackup=True)["spec"],
+                    **feature_gates_patch(incrementalBackup=True)["spec"],
                     VIRTUALIZATION_KEY: {
                         "changedBlockTrackingLabelSelectors": {
                             "virtualMachineLabelSelector": {"matchLabels": CBT_ENABLED_LABEL},
