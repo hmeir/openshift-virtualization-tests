@@ -6,7 +6,6 @@ import pytest
 import requests
 import xmltodict
 from bs4 import BeautifulSoup
-from ocp_resources.kubevirt import KubeVirt
 from ocp_resources.resource import Resource
 from pyhelper_utils.shell import run_ssh_commands
 from pytest_testconfig import config as py_config
@@ -19,7 +18,7 @@ from utilities.constants.timeouts import (
     TIMEOUT_5SEC,
     TIMEOUT_30SEC,
 )
-from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hco import set_hco_feature_gates
 from utilities.infra import get_node_selector_dict, get_node_selector_name
 from utilities.virt import (
     running_vm,
@@ -55,15 +54,10 @@ def download_and_install_vm_dump_metrics(vm, rpm_file_name):
 
 @pytest.fixture(scope="module")
 def enabled_downward_metrics_hco_featuregate(admin_client, hyperconverged_resource_scope_module):
-    with ResourceEditorValidateHCOReconcile(
+    with set_hco_feature_gates(
         admin_client=admin_client,
-        patches={
-            hyperconverged_resource_scope_module: hyperconverged_resource_scope_module.feature_gates_patch(
-                downwardMetrics=True
-            )
-        },
-        list_resource_reconcile=[KubeVirt],
-        wait_for_reconcile_post_update=True,
+        hco_resource=hyperconverged_resource_scope_module,
+        enable=["downwardMetrics"],
     ):
         yield
 

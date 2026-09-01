@@ -2,8 +2,8 @@ import pytest
 from ocp_resources.kubevirt import KubeVirt
 from ocp_resources.resource import ResourceEditor
 
+from utilities.constants.hco import VIRTUAL_MACHINE_OPTIONS_KEY, VIRTUALIZATION_KEY
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import VIRTUAL_MACHINE_OPTIONS_KEY, VIRTUALIZATION_KEY
 from utilities.virt import (
     VirtualMachineForTests,
     fedora_vm_body,

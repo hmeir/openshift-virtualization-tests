@@ -1,7 +1,7 @@
 """HyperConverged Operator (HCO) configuration constants.
 
 Covers expected status conditions, upgrade stream identifiers, TLS security profile keys,
-feature gate key names, and the full CNV CRD list.
+feature gate key names, the v1 spec group/field key names, and the full CNV CRD list.
 
 Not here:
 - HCO-managed component deployment/pod name strings → ``components.py``
@@ -67,6 +67,37 @@ DATA_SOURCE_NAME = "DATA_SOURCE_NAME"
 DATA_SOURCE_NAMESPACE = "DATA_SOURCE_NAMESPACE"
 SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME = "dataImportCronTemplates"
 COMMON_TEMPLATES_KEY_NAME = "commonTemplates"
+
+# v1 spec group keys (the v1 grouping — see docs/featuregates/hco_v1_api_field_mapping.md).
+VIRTUALIZATION_KEY = "virtualization"
+STORAGE_KEY = "storage"
+SECURITY_KEY = "security"
+DEPLOYMENT_KEY = "deployment"
+WORKLOAD_SOURCES_KEY = "workloadSources"
+NETWORKING_KEY = "networking"
+NODE_PLACEMENTS_KEY = "nodePlacements"
+INFRA_KEY = "infra"
+WORKLOAD_KEY = "workload"  # singular in v1 (v1beta1 used the plural "workloads")
+APPLICATION_AWARE_CONFIG_KEY = "applicationAwareConfig"
+APPLICATION_AWARE_CONFIG_ENABLE_KEY = "enable"
+
+# Virtualization-group field keys RESTRUCTURED in v1 (renamed or re-parented within the group).
+# Leaf keys whose names are unchanged (e.g. liveMigrationConfig, permittedHostDevices) keep their
+# existing constants/literals at the call sites; only their "virtualization" parent is added.
+VIRTUAL_MACHINE_OPTIONS_KEY = "virtualMachineOptions"  # now holds defaultCPUModel (was a top-level field)
+OBSOLETE_CPU_MODELS_KEY = "obsoleteCPUModels"  # renamed from v1beta1 "obsoleteCPUs"; value is now a []string
+
+# Storage-group field keys restructured in v1: renamed from v1beta1
+# spec.resourceRequirements.storageWorkloads (the resourceRequirements wrapper is dropped).
+WORKLOAD_RESOURCE_REQUIREMENTS_KEY = "workloadResourceRequirements"
+
+# Feature-gate serialization (v1 list format) and lifecycle phase names.
+FEATURE_GATE_ENABLED_STATE = "Enabled"
+FEATURE_GATE_DISABLED_STATE = "Disabled"
+FEATURE_GATE_PHASE_ALPHA = "alpha"
+FEATURE_GATE_PHASE_BETA = "beta"
+
+HYPERCONVERGED_CRD_NAME = f"hyperconvergeds.{Resource.ApiGroup.HCO_KUBEVIRT_IO}"
 
 DATA_IMPORT_CRON_ENABLE = (
     f"metadata->annotations->{DataImportCron.ApiGroup.DATA_IMPORT_CRON_TEMPLATE_KUBEVIRT_IO}/enable"

@@ -1,6 +1,5 @@
 import pytest
 from ocp_resources.data_source import DataSource
-from ocp_resources.kubevirt import KubeVirt
 from pytest_testconfig import config as py_config
 
 from tests.os_params import RHEL_LATEST, RHEL_LATEST_LABELS, RHEL_LATEST_OS
@@ -21,7 +20,7 @@ from utilities.artifactory import get_test_artifact_server_url
 from utilities.constants.hco import DISABLE_MDEV_CONFIGURATION
 from utilities.constants.timeouts import TIMEOUT_30MIN
 from utilities.constants.virt import ES_NONE
-from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hco import set_hco_feature_gates
 from utilities.infra import label_nodes
 from utilities.storage import (
     create_dv,
@@ -100,15 +99,10 @@ def hco_with_disable_mdev_configuration_session_scope(admin_client, hyperconverg
     does not configure mediated devices (vGPU configuration is handled
     by NVIDIA GPU Operator).
     """
-    with ResourceEditorValidateHCOReconcile(
+    with set_hco_feature_gates(
         admin_client=admin_client,
-        patches={
-            hyperconverged_resource_scope_session: hyperconverged_resource_scope_session.feature_gates_patch(**{
-                DISABLE_MDEV_CONFIGURATION: True
-            })
-        },
-        list_resource_reconcile=[KubeVirt],
-        wait_for_reconcile_post_update=True,
+        hco_resource=hyperconverged_resource_scope_session,
+        enable=[DISABLE_MDEV_CONFIGURATION],
     ):
         yield
 

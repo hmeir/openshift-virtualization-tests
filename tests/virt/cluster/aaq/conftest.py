@@ -29,6 +29,7 @@ from utilities.constants.aaq import (
     VM_CPU_CORES,
     VM_MEMORY_GUEST,
 )
+from utilities.constants.hco import APPLICATION_AWARE_CONFIG_KEY, DEPLOYMENT_KEY
 from utilities.constants.networking import (
     POD_CONTAINER_SPEC,
     POD_SECURITY_CONTEXT_SPEC,
@@ -38,7 +39,6 @@ from utilities.constants.timeouts import (
     TIMEOUT_5SEC,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile, enabled_aaq_in_hco
-from utilities.hyperconverged import APPLICATION_AWARE_CONFIG_KEY, DEPLOYMENT_KEY
 from utilities.infra import create_ns, get_pod_by_name_prefix, label_project
 from utilities.virt import (
     VirtualMachineForTests,

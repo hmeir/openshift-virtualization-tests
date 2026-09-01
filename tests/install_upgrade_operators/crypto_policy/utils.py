@@ -32,13 +32,12 @@ from tests.install_upgrade_operators.utils import (
     get_resource_key_value,
 )
 from utilities.constants.components import CLUSTER
-from utilities.constants.hco import TLS_SECURITY_PROFILE
+from utilities.constants.hco import SECURITY_KEY, TLS_SECURITY_PROFILE
 from utilities.constants.timeouts import (
     TIMEOUT_2MIN,
     TIMEOUT_60MIN,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile, wait_for_hco_conditions
-from utilities.hyperconverged import SECURITY_KEY
 from utilities.infra import ExecCommandOnPod
 from utilities.operator import wait_for_cluster_operator_stabilize
 

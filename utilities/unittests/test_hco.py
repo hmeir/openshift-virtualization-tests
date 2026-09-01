@@ -42,22 +42,28 @@ if "utilities.hco" in sys.modules:
 from utilities.hco import (
     CDI,
     DEFAULT_HCO_PROGRESSING_CONDITIONS,
+    FEATURE_GATE_DISABLED_STATE,
     HCO_JSONPATCH_ANNOTATION_COMPONENT_DICT,
     KubeVirt,
     Resource,
     ResourceEditorValidateHCOReconcile,
     add_labels_to_nodes,
     apply_np_changes,
+    common_boot_image_import_enabled,
     disable_common_boot_image_import_hco_spec,
     enable_common_boot_image_import_spec_wait_for_data_import_cron,
     enabled_aaq_in_hco,
+    feature_gates_patch,
     get_hco_namespace,
     get_hco_spec,
     get_hco_version,
     get_installed_hco_csv,
     get_json_patch_annotation_values,
     hco_cr_jsonpatch_annotations_dict,
+    is_feature_gate_enabled,
     is_hco_tainted,
+    parse_hco_fg_phases,
+    set_hco_feature_gates,
     update_common_boot_image_import_spec,
     update_hco_annotations,
     update_hco_templates_spec,
@@ -762,7 +768,7 @@ class TestDisableCommonBootImageImportHcoSpec:
         """Test disabling common boot image import when it's enabled"""
         mock_admin_client = MagicMock()
         mock_hco = MagicMock()
-        mock_hco.instance.to_dict.return_value = {"spec": {"workloadSources": {"enableCommonBootImageImport": True}}}
+        mock_hco.instance.spec = {"workloadSources": {"enableCommonBootImageImport": True}}
         mock_namespace = MagicMock()
         mock_dics = [MagicMock()]
 
@@ -792,7 +798,7 @@ class TestDisableCommonBootImageImportHcoSpec:
         """Test that exclude_data_source_names is forwarded to the teardown call"""
         mock_admin_client = MagicMock()
         mock_hco = MagicMock()
-        mock_hco.instance.to_dict.return_value = {"spec": {"workloadSources": {"enableCommonBootImageImport": True}}}
+        mock_hco.instance.spec = {"workloadSources": {"enableCommonBootImageImport": True}}
         mock_namespace = MagicMock()
         mock_dics = [MagicMock()]
         exclude_names = {"custom-datasource"}
@@ -821,7 +827,7 @@ class TestDisableCommonBootImageImportHcoSpec:
         """Test context manager when common boot image import is already disabled"""
         mock_admin_client = MagicMock()
         mock_hco = MagicMock()
-        mock_hco.instance.to_dict.return_value = {"spec": {"workloadSources": {"enableCommonBootImageImport": False}}}
+        mock_hco.instance.spec = {"workloadSources": {"enableCommonBootImageImport": False}}
         mock_namespace = MagicMock()
         mock_dics = [MagicMock()]
 
@@ -1345,3 +1351,184 @@ class TestEnabledAaqInHco:
             pass
 
         mock_logger.info.assert_called_with("AAQ system PODs removed.")
+
+
+def _hco_with_feature_gates(feature_gates):
+    """A HyperConverged stand-in whose live ``instance.spec`` holds the given featureGates list."""
+    mock_hco = MagicMock()
+    mock_hco.instance.spec = {"featureGates": feature_gates} if feature_gates is not None else {}
+    return mock_hco
+
+
+class TestFeatureGatesPatch:
+    """Test cases for feature_gates_patch"""
+
+    def test_enabled_gate_omits_state(self):
+        """An enabled gate is serialized without a state (Enabled is the default)"""
+        assert feature_gates_patch(downwardMetrics=True) == {"spec": {"featureGates": [{"name": "downwardMetrics"}]}}
+
+    def test_disabled_gate_sets_state(self):
+        """A disabled gate serializes an explicit Disabled state"""
+        assert feature_gates_patch(declarativeHotplugVolumes=False) == {
+            "spec": {"featureGates": [{"name": "declarativeHotplugVolumes", "state": FEATURE_GATE_DISABLED_STATE}]}
+        }
+
+    def test_multiple_gates(self):
+        """Multiple gates are emitted as a single replacement list"""
+        result = feature_gates_patch(gateOn=True, gateOff=False)
+        assert result["spec"]["featureGates"] == [
+            {"name": "gateOn"},
+            {"name": "gateOff", "state": FEATURE_GATE_DISABLED_STATE},
+        ]
+
+
+class TestIsFeatureGateEnabled:
+    """Test cases for is_feature_gate_enabled"""
+
+    def test_present_enabled(self):
+        """A present gate with no explicit state reads as enabled"""
+        hco = _hco_with_feature_gates([{"name": "gateA"}])
+        assert is_feature_gate_enabled(hco_resource=hco, name="gateA", fg_phases={}) is True
+
+    def test_present_disabled(self):
+        """A present gate with state Disabled reads as disabled"""
+        hco = _hco_with_feature_gates([{"name": "gateB", "state": FEATURE_GATE_DISABLED_STATE}])
+        assert is_feature_gate_enabled(hco_resource=hco, name="gateB", fg_phases={}) is False
+
+    def test_unset_beta_gate_enabled(self):
+        """An unset Beta gate defaults to enabled"""
+        hco = _hco_with_feature_gates(None)
+        assert is_feature_gate_enabled(hco_resource=hco, name="gateC", fg_phases={"gateC": "beta"}) is True
+
+    def test_unset_alpha_gate_disabled(self):
+        """An unset Alpha gate defaults to disabled"""
+        hco = _hco_with_feature_gates(None)
+        assert is_feature_gate_enabled(hco_resource=hco, name="gateD", fg_phases={"gateD": "alpha"}) is False
+
+    def test_unset_deprecated_gate_raises(self):
+        """An unset gate whose phase is neither alpha nor beta fails loud instead of guessing"""
+        hco = _hco_with_feature_gates(None)
+        with pytest.raises(ValueError, match="Cannot infer the state of unset feature gate"):
+            is_feature_gate_enabled(hco_resource=hco, name="gateE", fg_phases={"gateE": "deprecated"})
+
+
+class TestSetHcoFeatureGates:
+    """Test cases for set_hco_feature_gates context manager"""
+
+    @patch("utilities.hco.ResourceEditorValidateHCOReconcile")
+    def test_merges_with_existing_gates(self, mock_editor_class):
+        """Setting a gate preserves pre-existing gates (read-modify-write, not replace)"""
+        mock_hco = _hco_with_feature_gates([{"name": "existingGate"}])
+
+        mock_editor = MagicMock()
+        mock_editor.__enter__ = MagicMock(return_value=mock_editor)
+        mock_editor.__exit__ = MagicMock(return_value=None)
+        mock_editor_class.return_value = mock_editor
+
+        with set_hco_feature_gates(admin_client=MagicMock(), hco_resource=mock_hco, enable=["newGate"]):
+            pass
+
+        merged = mock_editor_class.call_args.kwargs["patches"][mock_hco]["spec"]["featureGates"]
+        assert {"name": "existingGate"} in merged
+        assert {"name": "newGate"} in merged
+
+    @patch("utilities.hco.ResourceEditorValidateHCOReconcile")
+    def test_overrides_same_gate(self, mock_editor_class):
+        """A requested gate overrides its pre-existing entry rather than duplicating it"""
+        mock_hco = _hco_with_feature_gates([{"name": "gate"}])
+
+        mock_editor = MagicMock()
+        mock_editor.__enter__ = MagicMock(return_value=mock_editor)
+        mock_editor.__exit__ = MagicMock(return_value=None)
+        mock_editor_class.return_value = mock_editor
+
+        with set_hco_feature_gates(admin_client=MagicMock(), hco_resource=mock_hco, disable=["gate"]):
+            pass
+
+        merged = mock_editor_class.call_args.kwargs["patches"][mock_hco]["spec"]["featureGates"]
+        assert merged == [{"name": "gate", "state": FEATURE_GATE_DISABLED_STATE}]
+
+
+class TestParseHcoFgPhases:
+    """Test cases for parse_hco_fg_phases"""
+
+    @staticmethod
+    def _crd_with_description(description):
+        crd = MagicMock()
+        crd.instance.to_dict.return_value = {
+            "spec": {
+                "versions": [
+                    {"name": "v1beta1", "schema": {}},
+                    {
+                        "name": "v1",
+                        "schema": {
+                            "openAPIV3Schema": {
+                                "properties": {"spec": {"properties": {"featureGates": {"description": description}}}}
+                            }
+                        },
+                    },
+                ]
+            }
+        }
+        return crd
+
+    # Mirrors the real CRD description: a phase-legend preamble (whose "* alpha:/beta:/..." bullets
+    # must NOT be parsed as gates) followed by the "Feature-Gate list:" header and the gate bullets.
+    _REALISTIC_DESCRIPTION = (
+        "FeatureGates is a set of optional feature gates. A feature gate may be in the following "
+        "phases: * alpha: the feature is in dev-preview. It is disabled by default, but can be "
+        "enabled. * beta: the feature gate is in tech-preview. It is enabled by default. * GA: the "
+        "feature is graduated. * deprecated: the feature is deprecated. Feature-Gate list: "
+        "* decentralizedLiveMigration: enables cross-cluster migration. Phase: beta "
+        "* downwardMetrics: exposes metrics to the guest. Phase: Alpha "
+        "* disableMDevConfiguration: deprecated gate. Phase: deprecated"
+    )
+
+    @patch("utilities.hco.CustomResourceDefinition")
+    def test_parses_phases(self, mock_crd_class):
+        """The gate list is parsed into a lower-cased phase map; the phase-legend preamble is ignored"""
+        mock_crd_class.return_value = self._crd_with_description(self._REALISTIC_DESCRIPTION)
+
+        result = parse_hco_fg_phases(admin_client=MagicMock())
+
+        assert result == {
+            "decentralizedLiveMigration": "beta",
+            "downwardMetrics": "alpha",
+            "disableMDevConfiguration": "deprecated",
+        }
+        # Preamble legend words must not leak in as gate names.
+        assert not {"alpha", "beta", "GA", "deprecated"} & result.keys()
+
+    @patch("utilities.hco.CustomResourceDefinition")
+    def test_empty_description_raises(self, mock_crd_class):
+        """An unparseable (empty) description fails loud rather than returning an empty map"""
+        mock_crd_class.return_value = self._crd_with_description("")
+
+        with pytest.raises(ValueError, match="Failed to parse feature gate phases"):
+            parse_hco_fg_phases(admin_client=MagicMock())
+
+    @patch("utilities.hco.CustomResourceDefinition")
+    def test_missing_header_raises(self, mock_crd_class):
+        """A description without the gate-list header fails loud (format change guard)"""
+        mock_crd_class.return_value = self._crd_with_description(
+            "* downwardMetrics: no header present here. Phase: Alpha"
+        )
+
+        with pytest.raises(ValueError, match="Failed to parse feature gate phases"):
+            parse_hco_fg_phases(admin_client=MagicMock())
+
+
+class TestCommonBootImageImportEnabled:
+    """Test cases for common_boot_image_import_enabled"""
+
+    def test_enabled(self):
+        """Returns True when the workloadSources flag is set"""
+        mock_hco = MagicMock()
+        mock_hco.instance.spec = {"workloadSources": {"enableCommonBootImageImport": True}}
+        assert common_boot_image_import_enabled(hco_resource=mock_hco) is True
+
+    def test_disabled(self):
+        """Returns False when the workloadSources flag is unset"""
+        mock_hco = MagicMock()
+        mock_hco.instance.spec = {"workloadSources": {"enableCommonBootImageImport": False}}
+        assert common_boot_image_import_enabled(hco_resource=mock_hco) is False

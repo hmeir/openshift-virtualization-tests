@@ -17,12 +17,12 @@ from tests.install_upgrade_operators.hco_enablement_golden_image_updates.utils i
     verify_resource_not_in_ns,
 )
 from utilities.constants.architecture import MULTIARCH
+from utilities.constants.hco import WORKLOAD_SOURCES_KEY
 from utilities.constants.timeouts import TIMEOUT_3MIN, TIMEOUT_10MIN
 from utilities.hco import (
     ResourceEditorValidateHCOReconcile,
     wait_for_hco_conditions,
 )
-from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 from utilities.infra import create_ns
 from utilities.storage import get_data_sources_managed_by_data_import_cron
 

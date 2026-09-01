@@ -18,9 +18,9 @@ from tests.install_upgrade_operators.hco_enablement_golden_image_updates.utils i
 from utilities.constants.hco import (
     DATA_IMPORT_CRON_ENABLE,
     SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME,
+    WORKLOAD_SOURCES_KEY,
 )
 from utilities.hco import update_hco_templates_spec, wait_for_hco_conditions
-from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 
 pytestmark = [pytest.mark.arm64, pytest.mark.s390x]
 

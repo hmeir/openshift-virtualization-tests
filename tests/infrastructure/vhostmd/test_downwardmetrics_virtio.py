@@ -8,7 +8,6 @@ from kubernetes.dynamic.exceptions import (
     ResourceNotFoundError,
     UnprocessibleEntityError,
 )
-from ocp_resources.kubevirt import KubeVirt
 from ocp_resources.resource import Resource
 from ocp_resources.virtual_machine import VirtualMachine
 from ocp_resources.virtual_machine_cluster_instancetype import (
@@ -20,7 +19,7 @@ from ocp_resources.virtual_machine_cluster_preference import (
 from pyhelper_utils.shell import run_ssh_commands
 
 from utilities.constants.images import OS_FLAVOR_RHEL
-from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hco import set_hco_feature_gates
 from utilities.virt import VirtualMachineForTests, wait_for_running_vm
 
 LOGGER = logging.getLogger(__name__)
@@ -96,15 +95,10 @@ def enabled_feature_gate_for_downward_metrics_scope_function(
     admin_client,
     hyperconverged_resource_scope_function,
 ):
-    with ResourceEditorValidateHCOReconcile(
+    with set_hco_feature_gates(
         admin_client=admin_client,
-        patches={
-            hyperconverged_resource_scope_function: hyperconverged_resource_scope_function.feature_gates_patch(
-                downwardMetrics=True
-            )
-        },
-        list_resource_reconcile=[KubeVirt],
-        wait_for_reconcile_post_update=True,
+        hco_resource=hyperconverged_resource_scope_function,
+        enable=["downwardMetrics"],
     ):
         yield
 

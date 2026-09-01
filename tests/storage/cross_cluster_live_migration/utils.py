@@ -10,9 +10,9 @@ from timeout_sampler import TimeoutExpiredError, TimeoutSampler
 
 from utilities import console
 from utilities.constants.components import VIRT_HANDLER
+from utilities.constants.hco import VIRTUALIZATION_KEY
 from utilities.constants.timeouts import TIMEOUT_3MIN, TIMEOUT_5SEC
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.infra import get_daemonset_by_name
 from utilities.virt import VirtualMachineForTests, migrate_vm_and_verify, wait_for_virt_handler_pods_network_updated
 

@@ -11,8 +11,8 @@ from libs.vm.factory import base_vmspec, fedora_vm
 from libs.vm.spec import Interface, Multus, Network
 from libs.vm.vm import BaseVirtualMachine
 from tests.network.libs.mac import random_mac_range
+from utilities.constants.hco import NETWORKING_KEY
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import NETWORKING_KEY
 from utilities.network import MacPool
 
 

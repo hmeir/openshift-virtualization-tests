@@ -31,8 +31,7 @@ from utilities.constants.components import (
     KUBEVIRT_HCO_NAME,
     SSP_KUBEVIRT_HYPERCONVERGED,
 )
-from utilities.constants.hco import TLS_SECURITY_PROFILE
-from utilities.hyperconverged import SECURITY_KEY
+from utilities.constants.hco import SECURITY_KEY, TLS_SECURITY_PROFILE
 
 LOGGER = logging.getLogger(__name__)
 pytestmark = [pytest.mark.post_upgrade, pytest.mark.sno, pytest.mark.s390x]

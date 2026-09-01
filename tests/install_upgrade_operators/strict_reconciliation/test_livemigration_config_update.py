@@ -7,7 +7,7 @@ from tests.install_upgrade_operators.strict_reconciliation.constants import (
     KUBEVIRT_CR_MIGRATIONS_KEY,
     LIVE_MIGRATION_CONFIG_KEY,
 )
-from utilities.hyperconverged import VIRTUALIZATION_KEY
+from utilities.constants.hco import VIRTUALIZATION_KEY
 
 pytestmark = [pytest.mark.post_upgrade, pytest.mark.sno, pytest.mark.gating, pytest.mark.arm64, pytest.mark.s390x]
 EXPECTED_VALUE = True

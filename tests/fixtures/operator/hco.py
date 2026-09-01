@@ -5,13 +5,12 @@ from ocp_resources.catalog_source import CatalogSource
 from pytest_testconfig import config as py_config
 
 import utilities.hco
-from utilities.constants.hco import SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME
-from utilities.hyperconverged import (
+from utilities.constants.hco import (
     DEPLOYMENT_KEY,
     INFRA_KEY,
     NODE_PLACEMENTS_KEY,
+    SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME,
     WORKLOAD_KEY,
-    parse_hco_fg_phases,
 )
 from utilities.infra import get_hyperconverged_resource
 
@@ -56,9 +55,9 @@ def hyperconverged_resource_scope_session(admin_client, hco_namespace, installin
 def hco_fg_phases(admin_client):
     """Feature-gate name -> lifecycle phase map parsed from the v1 HCO CRD (read once per session).
 
-    Consumed by feature-gate reads via ``HyperConvergedV1.is_feature_gate_enabled``.
+    Consumed by feature-gate reads via ``utilities.hco.is_feature_gate_enabled``.
     """
-    return parse_hco_fg_phases(admin_client=admin_client)
+    return utilities.hco.parse_hco_fg_phases(admin_client=admin_client)
 
 
 @pytest.fixture(scope="class")

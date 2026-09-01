@@ -22,6 +22,7 @@ from tests.virt.upgrade.utils import (
 from tests.virt.utils import get_boot_time_for_multiple_vms
 from utilities.artifactory import get_test_artifact_server_url
 from utilities.constants import Images
+from utilities.constants.hco import VIRTUALIZATION_KEY
 from utilities.constants.images import OS_FLAVOR_RHEL
 from utilities.constants.timeouts import (
     TIMEOUT_30MIN,
@@ -29,7 +30,6 @@ from utilities.constants.timeouts import (
 )
 from utilities.constants.virt import ES_LIVE_MIGRATE_IF_POSSIBLE
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.infra import create_ns, get_csv_by_name
 from utilities.storage import (
     create_dv,

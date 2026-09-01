@@ -12,9 +12,9 @@ from tests.virt.cluster.common_templates.custom_namespace.utils import (
     remove_templates,
     wait_for_ssp_custom_template_namespace,
 )
+from utilities.constants.hco import WORKLOAD_SOURCES_KEY
 from utilities.constants.namespaces import NamespacesNames
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 from utilities.infra import create_ns
 
 COMMON_TEMPLATES_NAMESPACE_KEY = "commonTemplatesNamespace"

@@ -28,12 +28,12 @@ from utilities.constants.components import (
     CDI_KUBEVIRT_HYPERCONVERGED,
     KUBEVIRT_HCO_NAME,
 )
-from utilities.constants.hco import RESOURCE_REQUIREMENTS_KEY_HCO_CR
-from utilities.hyperconverged import (
+from utilities.constants.hco import (
     DEPLOYMENT_KEY,
     INFRA_KEY,
     NODE_PLACEMENTS_KEY,
     OBSOLETE_CPU_MODELS_KEY,
+    RESOURCE_REQUIREMENTS_KEY_HCO_CR,
     STORAGE_KEY,
     VIRTUALIZATION_KEY,
     WORKLOAD_KEY,

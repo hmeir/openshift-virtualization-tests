@@ -25,7 +25,7 @@ from tests.virt.node.gpu.constants import (
     VGPU_PRETTY_NAME_STR,
 )
 from utilities.artifactory import get_test_artifact_server_url
-from utilities.constants.hco import DEFAULT_HCO_CONDITIONS
+from utilities.constants.hco import DEFAULT_HCO_CONDITIONS, VIRTUALIZATION_KEY
 from utilities.constants.images import OS_FLAVOR_WINDOWS
 from utilities.constants.os_matrix import DATA_SOURCE_STR
 from utilities.constants.timeouts import (
@@ -43,7 +43,6 @@ from utilities.hco import (
     update_hco_annotations,
     wait_for_hco_conditions,
 )
-from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.storage import (
     create_dv,
     create_or_update_data_source,

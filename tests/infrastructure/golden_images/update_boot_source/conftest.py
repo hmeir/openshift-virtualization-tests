@@ -17,7 +17,7 @@ from tests.infrastructure.golden_images.update_boot_source.utils import (
     get_all_release_versions_from_docs,
 )
 from utilities.constants import Images
-from utilities.constants.hco import SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME
+from utilities.constants.hco import SSP_CR_COMMON_TEMPLATES_LIST_KEY_NAME, WORKLOAD_SOURCES_KEY
 from utilities.constants.images import DEFAULT_FEDORA_REGISTRY_URL
 from utilities.constants.storage import BIND_IMMEDIATE_ANNOTATION
 from utilities.constants.timeouts import (
@@ -30,7 +30,6 @@ from utilities.hco import (
     ResourceEditorValidateHCOReconcile,
     enable_common_boot_image_import_spec_wait_for_data_import_cron,
 )
-from utilities.hyperconverged import WORKLOAD_SOURCES_KEY
 from utilities.infra import create_ns
 from utilities.ssp import (
     wait_for_condition_message_value,

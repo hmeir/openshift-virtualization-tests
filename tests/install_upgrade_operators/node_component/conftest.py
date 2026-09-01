@@ -27,12 +27,15 @@ from utilities.constants.components import (
     VIRT_TEMPLATE_VALIDATOR,
 )
 from utilities.constants.hco import (
+    DEPLOYMENT_KEY,
     HCO_SUBSCRIPTION,
     IMAGE_CRON_STR,
+    INFRA_KEY,
+    NODE_PLACEMENTS_KEY,
+    WORKLOAD_KEY,
 )
 from utilities.constants.timeouts import TIMEOUT_2MIN, TIMEOUT_5MIN, TIMEOUT_10SEC
 from utilities.hco import add_labels_to_nodes, apply_np_changes, wait_for_hco_conditions
-from utilities.hyperconverged import DEPLOYMENT_KEY, INFRA_KEY, NODE_PLACEMENTS_KEY, WORKLOAD_KEY
 from utilities.infra import (
     get_daemonset_by_name,
     get_deployment_by_name,

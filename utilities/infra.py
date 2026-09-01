@@ -31,6 +31,7 @@ from ocp_resources.console_cli_download import ConsoleCLIDownload
 from ocp_resources.daemonset import DaemonSet
 from ocp_resources.deployment import Deployment
 from ocp_resources.exceptions import ResourceTeardownError
+from ocp_resources.hyperconverged import HyperConverged
 from ocp_resources.infrastructure import Infrastructure
 from ocp_resources.namespace import Namespace
 from ocp_resources.package_manifest import PackageManifest
@@ -80,7 +81,6 @@ from utilities.exceptions import (
     UrlNotFoundError,
     UtilityPodNotFoundError,
 )
-from utilities.hyperconverged import HyperConvergedV1
 from utilities.ssp import guest_agent_version_parser
 
 NON_EXIST_URL = "https://noneexist.test"  # Use 'test' domain rfc6761
@@ -618,8 +618,8 @@ def get_hco_mismatch_statuses(hco_status_conditions, expected_hco_status):
 def get_hyperconverged_resource(client, hco_ns_name):
     hco_name = py_config["hco_cr_name"]
     # api_version is left unset so the base class auto-negotiates the highest served version
-    # (v1 on CNV 5.0). HyperConvergedV1 carries the v1 spec structure used by call sites.
-    hco = HyperConvergedV1(
+    # (v1 on CNV 5.0+, which is all main runs on). The generated HyperConverged class is v1-shaped.
+    hco = HyperConverged(
         client=client,
         namespace=hco_ns_name,
         name=hco_name,

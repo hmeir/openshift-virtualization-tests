@@ -15,6 +15,7 @@ from tests.virt.node.gpu.constants import (
     NVIDIA_VFIO_MANAGER_DS,
 )
 from tests.virt.node.gpu.utils import wait_for_ds_ready
+from utilities.constants.hco import VIRTUALIZATION_KEY
 from utilities.constants.namespaces import NamespacesNames
 from utilities.constants.timeouts import (
     TIMEOUT_1MIN,
@@ -22,7 +23,6 @@ from utilities.constants.timeouts import (
 )
 from utilities.constants.virt import KERNEL_DRIVER
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.infra import label_nodes
 from utilities.virt import get_nodes_gpu_info
 

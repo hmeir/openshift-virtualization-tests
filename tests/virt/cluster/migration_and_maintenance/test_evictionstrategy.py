@@ -6,6 +6,7 @@ from ocp_resources.resource import ResourceEditor
 from timeout_sampler import TimeoutSampler
 
 from tests.os_params import RHEL_LATEST, RHEL_LATEST_LABELS
+from utilities.constants.hco import VIRTUALIZATION_KEY
 from utilities.constants.timeouts import (
     TIMEOUT_3MIN,
     TIMEOUT_5MIN,
@@ -15,7 +16,6 @@ from utilities.constants.virt import (
     LIVE_MIGRATE,
 )
 from utilities.hco import ResourceEditorValidateHCOReconcile
-from utilities.hyperconverged import VIRTUALIZATION_KEY
 from utilities.virt import (
     check_migration_process_after_node_drain,
     drain_node,
