@@ -18,7 +18,7 @@ from tests.install_upgrade_operators.strict_reconciliation.utils import (
 from tests.utils import wait_for_cr_labels_change
 from utilities.constants.cluster import VERSION_LABEL_KEY
 from utilities.constants.timeouts import TIMEOUT_1MIN
-from utilities.hco import ResourceEditorValidateHCOReconcile
+from utilities.hco import ResourceEditorValidateHCOReconcile, hco_feature_gates_patch
 
 LOGGER = logging.getLogger(__name__)
 DISABLED_KUBEVIRT_FEATUREGATES_IN_SNO = ["LiveMigration", "SRIOVLiveMigration"]
@@ -124,17 +124,18 @@ def hco_with_non_default_feature_gates(
     hyperconverged_resource_scope_function,
 ):
     new_fgs = request.param["fgs"]
-    hco_fgs = hyperconverged_resource_scope_function.instance.to_dict()["spec"]["featureGates"]
-
-    for fg in new_fgs:
-        hco_fgs[fg] = True
     with ResourceEditorValidateHCOReconcile(
         admin_client=admin_client,
-        patches={hyperconverged_resource_scope_function: {"spec": {"featureGates": hco_fgs}}},
+        patches={
+            hyperconverged_resource_scope_function: hco_feature_gates_patch(
+                hco_resource=hyperconverged_resource_scope_function,
+                enable=new_fgs,
+            )
+        },
         list_resource_reconcile=[KubeVirt],
         wait_for_reconcile_post_update=True,
     ):
-        yield
+        yield new_fgs
 
 
 @pytest.fixture()
