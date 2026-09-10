@@ -147,6 +147,7 @@ def test_cdi_tunables_in_hco_propagated_to_cr(
         admin_client=admin_client,
         patches={hyperconverged_resource_scope_module: {"spec": hco_updated_spec_stanza}},
         list_resource_reconcile=[CDI],
+        wait_for_reconcile_post_update=True,
     ):
         propagated = False
         for sample in TimeoutSampler(wait_timeout=20, sleep=1, func=_verify_propagation):

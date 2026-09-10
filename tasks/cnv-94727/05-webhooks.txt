@@ -1,0 +1,26 @@
+### MUTATING mutate-hyperconverged-hco* ###
+== mutatingwebhookconfiguration.admissionregistration.k8s.io/mutate-hyperconverged-hco-v1beta1.kubevirt.io-48nzc ==
+name=mutate-hyperconverged-hco-v1beta1.kubevirt.io
+  failurePolicy=Fail
+  matchPolicy=Exact
+  rules.apiVersions=["v1beta1"]
+
+== mutatingwebhookconfiguration.admissionregistration.k8s.io/mutate-hyperconverged-hco.kubevirt.io-dp4hj ==
+name=mutate-hyperconverged-hco.kubevirt.io
+  failurePolicy=Fail
+  matchPolicy=Exact
+  rules.apiVersions=["v1"]
+
+### VALIDATING validate-hco* ###
+== validatingwebhookconfiguration.admissionregistration.k8s.io/validate-hco-v1beta1.kubevirt.io-kdrz2 ==
+name=validate-hco-v1beta1.kubevirt.io
+  failurePolicy=Fail
+  matchPolicy=Exact
+  rules.apiVersions=["v1beta1"]
+
+== validatingwebhookconfiguration.admissionregistration.k8s.io/validate-hco.kubevirt.io-rxk4b ==
+name=validate-hco.kubevirt.io
+  failurePolicy=Fail
+  matchPolicy=Exact
+  rules.apiVersions=["v1"]
+

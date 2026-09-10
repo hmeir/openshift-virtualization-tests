@@ -1,0 +1,11 @@
+=== 1. versions ===
+NAME      VERSION      AVAILABLE   PROGRESSING   SINCE   STATUS
+version   5.0.0-ec.6   True        False         37h     Cluster version is 5.0.0-ec.6
+
+NAME                                       DISPLAY                    VERSION   RELEASE   REPLACES                                   PHASE
+kubevirt-hyperconverged-operator.v4.22.6   OpenShift Virtualization   4.22.6              kubevirt-hyperconverged-operator.v4.22.2   Succeeded
+
+hco-operator image:
+registry.redhat.io/container-native-virtualization/hyperconverged-cluster-operator-rhel9@sha256:3b7aed753acf8f736e2c8186aaa479e06e1790fda8da2bdd006ce695643d05fc
+hco-webhook image:
+registry.redhat.io/container-native-virtualization/hyperconverged-cluster-webhook-rhel9@sha256:bc4a29e12d23a436f4d327dc2121e5335a00dde5510d605347eb6deff60c1731

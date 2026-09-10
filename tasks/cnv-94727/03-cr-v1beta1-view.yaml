@@ -1,0 +1,498 @@
+apiVersion: hco.kubevirt.io/v1beta1
+kind: HyperConverged
+metadata:
+  creationTimestamp: "2026-08-12T10:40:00Z"
+  finalizers:
+  - kubevirt.io/hyperconverged
+  generation: 32
+  labels:
+    app: kubevirt-hyperconverged
+  name: kubevirt-hyperconverged
+  namespace: openshift-cnv
+  resourceVersion: "21331195"
+  uid: bf0cb309-7294-431d-b720-fd56fac97b95
+spec:
+  certConfig:
+    ca:
+      duration: 48h0m0s
+      renewBefore: 24h0m0s
+    server:
+      duration: 24h0m0s
+      renewBefore: 12h0m0s
+  deployVmConsoleProxy: false
+  enableApplicationAwareQuota: false
+  enableCommonBootImageImport: true
+  evictionStrategy: LiveMigrate
+  featureGates:
+    alignCPUs: false
+    containerPathVolumes: false
+    decentralizedLiveMigration: true
+    declarativeHotplugVolumes: false
+    deployKubeSecondaryDNS: false
+    disableMDevConfiguration: false
+    downwardMetrics: false
+    enableMultiArchBootImageImport: false
+    incrementalBackup: false
+    objectGraph: false
+    persistentReservation: false
+    videoConfig: true
+  higherWorkloadDensity:
+    memoryOvercommitPercentage: 100
+  infra: {}
+  ksmConfiguration: {}
+  liveMigrationConfig:
+    allowAutoConverge: false
+    allowPostCopy: false
+    completionTimeoutPerGiB: 150
+    parallelMigrationsPerCluster: 5
+    parallelOutboundMigrationsPerNode: 2
+    progressTimeout: 150
+  resourceRequirements:
+    vmiCPUAllocationRatio: 10
+  uninstallStrategy: BlockUninstallIfWorkloadsExist
+  virtualMachineOptions:
+    disableFreePageReporting: false
+    disableSerialConsoleLog: false
+  workloadUpdateStrategy:
+    batchEvictionInterval: 1m0s
+    batchEvictionSize: 10
+    workloadUpdateMethods:
+    - LiveMigrate
+  workloads: {}
+status:
+  conditions:
+  - lastTransitionTime: "2026-08-13T12:23:24Z"
+    message: Reconcile completed successfully
+    observedGeneration: 32
+    reason: ReconcileCompleted
+    status: "True"
+    type: ReconcileComplete
+  - lastTransitionTime: "2026-08-25T14:11:44Z"
+    message: Reconcile completed successfully
+    observedGeneration: 32
+    reason: ReconcileCompleted
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-08-25T14:11:44Z"
+    message: Reconcile completed successfully
+    observedGeneration: 32
+    reason: ReconcileCompleted
+    status: "False"
+    type: Progressing
+  - lastTransitionTime: "2026-08-25T13:47:47Z"
+    message: Reconcile completed successfully
+    observedGeneration: 32
+    reason: ReconcileCompleted
+    status: "False"
+    type: Degraded
+  - lastTransitionTime: "2026-08-25T14:11:44Z"
+    message: Reconcile completed successfully
+    observedGeneration: 32
+    reason: ReconcileCompleted
+    status: "True"
+    type: Upgradeable
+  dataImportCronTemplates:
+  - metadata:
+      annotations:
+        cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+        ssp.kubevirt.io/dict.architectures: amd64,arm64,s390x
+      labels:
+        kubevirt.io/dynamic-credentials-support: "true"
+      name: centos-stream10-image-cron
+    spec:
+      garbageCollect: Outdated
+      importsToKeep: 1
+      managedDataSource: centos-stream10
+      retentionPolicy: None
+      schedule: 50 2/12 * * *
+      template:
+        metadata: {}
+        spec:
+          source:
+            registry:
+              pullMethod: node
+              url: docker://quay.io/containerdisks/centos-stream:10
+          storage:
+            resources:
+              requests:
+                storage: 30Gi
+        status: {}
+    status:
+      commonTemplate: true
+  - metadata:
+      annotations:
+        cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+        ssp.kubevirt.io/dict.architectures: amd64,arm64,s390x
+      labels:
+        kubevirt.io/dynamic-credentials-support: "true"
+      name: centos-stream9-image-cron
+    spec:
+      garbageCollect: Outdated
+      importsToKeep: 1
+      managedDataSource: centos-stream9
+      retentionPolicy: None
+      schedule: 50 2/12 * * *
+      template:
+        metadata: {}
+        spec:
+          source:
+            registry:
+              pullMethod: node
+              url: docker://quay.io/containerdisks/centos-stream:9
+          storage:
+            resources:
+              requests:
+                storage: 30Gi
+        status: {}
+    status:
+      commonTemplate: true
+  - metadata:
+      annotations:
+        cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+        ssp.kubevirt.io/dict.architectures: amd64,arm64,s390x
+      labels:
+        kubevirt.io/dynamic-credentials-support: "true"
+      name: fedora-image-cron
+    spec:
+      garbageCollect: Outdated
+      importsToKeep: 1
+      managedDataSource: fedora
+      retentionPolicy: None
+      schedule: 50 2/12 * * *
+      template:
+        metadata: {}
+        spec:
+          source:
+            registry:
+              pullMethod: node
+              url: docker://quay.io/containerdisks/fedora:latest
+          storage:
+            resources:
+              requests:
+                storage: 30Gi
+        status: {}
+    status:
+      commonTemplate: true
+  - metadata:
+      annotations:
+        cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+        ssp.kubevirt.io/dict.architectures: amd64,arm64,s390x
+      labels:
+        kubevirt.io/dynamic-credentials-support: "true"
+      name: rhel10-image-cron
+    spec:
+      garbageCollect: Outdated
+      importsToKeep: 1
+      managedDataSource: rhel10
+      retentionPolicy: None
+      schedule: 50 2/12 * * *
+      template:
+        metadata: {}
+        spec:
+          source:
+            registry:
+              imageStream: rhel10-guest
+              pullMethod: node
+          storage:
+            resources:
+              requests:
+                storage: 30Gi
+        status: {}
+    status:
+      commonTemplate: true
+  - metadata:
+      annotations:
+        cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+        ssp.kubevirt.io/dict.architectures: amd64,arm64,s390x
+      name: rhel8-image-cron
+    spec:
+      garbageCollect: Outdated
+      importsToKeep: 1
+      managedDataSource: rhel8
+      retentionPolicy: None
+      schedule: 50 2/12 * * *
+      template:
+        metadata: {}
+        spec:
+          source:
+            registry:
+              imageStream: rhel8-guest
+              pullMethod: node
+          storage:
+            resources:
+              requests:
+                storage: 30Gi
+        status: {}
+    status:
+      commonTemplate: true
+  - metadata:
+      annotations:
+        cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+        ssp.kubevirt.io/dict.architectures: amd64,arm64,s390x
+      labels:
+        kubevirt.io/dynamic-credentials-support: "true"
+      name: rhel9-image-cron
+    spec:
+      garbageCollect: Outdated
+      importsToKeep: 1
+      managedDataSource: rhel9
+      retentionPolicy: None
+      schedule: 50 2/12 * * *
+      template:
+        metadata: {}
+        spec:
+          source:
+            registry:
+              imageStream: rhel9-guest
+              pullMethod: node
+          storage:
+            resources:
+              requests:
+                storage: 30Gi
+        status: {}
+    status:
+      commonTemplate: true
+  dataImportSchedule: 50 2/12 * * *
+  infrastructureHighlyAvailable: true
+  nodeInfo:
+    controlPlaneArchitectures:
+    - amd64
+    workloadsArchitectures:
+    - amd64
+  observedGeneration: 32
+  relatedObjects:
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    name: kubevirt-hyperconverged-prometheus-rule
+    namespace: openshift-cnv
+    resourceVersion: "63476"
+    uid: 02dd72c5-215f-415d-9c2f-64cb3a12c3e6
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    name: hyperconverged-cluster-operator-metrics
+    namespace: openshift-cnv
+    resourceVersion: "63500"
+    uid: 6f36dbbb-1ad5-43df-9343-e89b3d316439
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    name: hyperconverged-cluster-operator-metrics
+    namespace: openshift-cnv
+    resourceVersion: "63511"
+    uid: 7acc071b-08b3-47de-a5a2-06cf8a27cd35
+  - apiVersion: v1
+    kind: Service
+    name: kubevirt-hyperconverged-operator-metrics
+    namespace: openshift-cnv
+    resourceVersion: "63514"
+    uid: 39f6b32b-7443-4792-8752-cc3b212c748c
+  - apiVersion: v1
+    kind: Secret
+    name: hco-bearer-auth
+    namespace: openshift-cnv
+    resourceVersion: "17306732"
+    uid: 13034fad-ea60-42a0-a223-e568a78104c4
+  - apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    name: kubevirt-hyperconverged-operator-metrics
+    namespace: openshift-cnv
+    resourceVersion: "17306771"
+    uid: 296db23e-e083-4446-95f6-3e4fa6c728f5
+  - apiVersion: scheduling.k8s.io/v1
+    kind: PriorityClass
+    name: kubevirt-cluster-critical
+    resourceVersion: "63363"
+    uid: 895449c9-5511-4081-8d95-7182327fadd6
+  - apiVersion: kubevirt.io/v1
+    kind: KubeVirt
+    name: kubevirt-kubevirt-hyperconverged
+    namespace: openshift-cnv
+    resourceVersion: "19875189"
+    uid: 29e17ad8-7951-4401-a82b-86e03367587e
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: CDI
+    name: cdi-kubevirt-hyperconverged
+    resourceVersion: "17306870"
+    uid: 8f2bae7f-e2ac-44e6-a42c-494e7fb401e1
+  - apiVersion: networkaddonsoperator.network.kubevirt.io/v1
+    kind: NetworkAddonsConfig
+    name: cluster
+    resourceVersion: "17320879"
+    uid: 8797bbe9-a418-4541-b2e7-8e339248f318
+  - apiVersion: migrations.kubevirt.io/v1alpha1
+    kind: MigController
+    name: migcontroller-kubevirt-hyperconverged
+    namespace: openshift-cnv
+    resourceVersion: "17306229"
+    uid: a74af33e-2a13-4574-839d-725367f515cb
+  - apiVersion: ssp.kubevirt.io/v1beta3
+    kind: SSP
+    name: ssp-kubevirt-hyperconverged
+    namespace: openshift-cnv
+    resourceVersion: "21331192"
+    uid: b60814f4-3d8e-4cd3-abc5-f8a921473ee6
+  - apiVersion: console.openshift.io/v1
+    kind: ConsoleCLIDownload
+    name: virtctl-clidownloads-kubevirt-hyperconverged
+    resourceVersion: "64401"
+    uid: c736f949-9979-4262-9842-f0298dff1c9f
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    name: hyperconverged-cluster-cli-download
+    namespace: openshift-cnv
+    resourceVersion: "64411"
+    uid: df1268e7-ce22-46b6-871e-881fd320000d
+  - apiVersion: v1
+    kind: Service
+    name: hyperconverged-cluster-cli-download
+    namespace: openshift-cnv
+    resourceVersion: "64413"
+    uid: 3a610dfd-fa14-466d-9994-0fc49706fb7e
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    name: virtio-win
+    namespace: openshift-cnv
+    resourceVersion: "64428"
+    uid: 7e101b6e-a60d-46bc-86b3-30f72e9ab0db
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    name: virtio-win
+    namespace: openshift-cnv
+    resourceVersion: "64434"
+    uid: da720e6e-e06c-4c5a-b2d1-de8c1510d2cd
+  - apiVersion: v1
+    kind: ConfigMap
+    name: virtio-win
+    namespace: openshift-cnv
+    resourceVersion: "64435"
+    uid: 411ee592-4d04-4674-9d3f-0f64b056e675
+  - apiVersion: v1
+    kind: Service
+    name: kubevirt-console-plugin-service
+    namespace: openshift-cnv
+    resourceVersion: "64503"
+    uid: 13ab74b9-02d2-418b-bee7-d63900ebffc2
+  - apiVersion: v1
+    kind: Service
+    name: kubevirt-apiserver-proxy-service
+    namespace: openshift-cnv
+    resourceVersion: "64507"
+    uid: a48852b6-4f85-41fd-be07-4a922f6b610a
+  - apiVersion: v1
+    kind: ServiceAccount
+    name: kubevirt-console-plugin
+    namespace: openshift-cnv
+    resourceVersion: "64462"
+    uid: 35d51657-5e7c-450d-bc17-37f6629024f5
+  - apiVersion: v1
+    kind: ServiceAccount
+    name: kubevirt-apiserver-proxy
+    namespace: openshift-cnv
+    resourceVersion: "64463"
+    uid: 172e2930-d706-469f-b147-cb904811d1d2
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: kubevirt-console-plugin
+    namespace: openshift-cnv
+    resourceVersion: "17302235"
+    uid: 9bef5b30-de22-4bd1-bad5-831243a0c540
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: kubevirt-apiserver-proxy
+    namespace: openshift-cnv
+    resourceVersion: "17302137"
+    uid: e44cd4b0-facb-4b48-a9f9-cf043086e88b
+  - apiVersion: v1
+    kind: ConfigMap
+    name: kubevirt-user-settings
+    namespace: openshift-cnv
+    resourceVersion: "64482"
+    uid: d6411f6a-1580-498d-83a8-cc770a46dabd
+  - apiVersion: v1
+    kind: ConfigMap
+    name: kubevirt-ui-features
+    namespace: openshift-cnv
+    resourceVersion: "64495"
+    uid: 6fb49b5e-9bc8-4712-bd55-993dbceb659d
+  - apiVersion: console.openshift.io/v1
+    kind: ConsolePlugin
+    name: kubevirt-plugin
+    resourceVersion: "64504"
+    uid: 92040e81-16cf-4204-b7d9-ad9f5c9546ca
+  - apiVersion: v1
+    kind: ConfigMap
+    name: nginx-conf
+    namespace: openshift-cnv
+    resourceVersion: "64513"
+    uid: bf94eaf3-f412-4c06-81bc-d3f9a7d30d51
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    name: kubevirt-ui-config-reader
+    namespace: openshift-cnv
+    resourceVersion: "64558"
+    uid: 31dd9cd5-f8c5-400f-9e04-25d58d4ff46a
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    name: kubevirt-ui-config-reader-rolebinding
+    namespace: openshift-cnv
+    resourceVersion: "64608"
+    uid: 4125ef4f-641e-473c-ae60-b01f661417eb
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: kubevirt-console-plugin-np
+    namespace: openshift-cnv
+    resourceVersion: "64610"
+    uid: 0e35972d-ace5-46d9-bb0f-cda242076e84
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    name: kubevirt-apiserver-proxy-np
+    namespace: openshift-cnv
+    resourceVersion: "64613"
+    uid: 7ca38571-1e4f-499a-97e8-4930453f3fdd
+  - apiVersion: console.openshift.io/v1
+    kind: ConsoleQuickStart
+    name: windows-bootsource-pipeline
+    resourceVersion: "64632"
+    uid: 880f6d9a-e139-45bc-8cbb-ca3ce64a8b0f
+  - apiVersion: console.openshift.io/v1
+    kind: ConsoleQuickStart
+    name: creating-virtual-machine
+    resourceVersion: "64636"
+    uid: 3f10a6fd-dec7-47cd-a4ea-1d6ccb077722
+  - apiVersion: console.openshift.io/v1
+    kind: ConsoleQuickStart
+    name: creating-virtual-machine-from-volume
+    resourceVersion: "64642"
+    uid: b2c64197-72b4-4e5c-b2e9-723af55d37ce
+  - apiVersion: console.openshift.io/v1
+    kind: ConsoleQuickStart
+    name: upload-boot-source
+    resourceVersion: "64644"
+    uid: afb6b262-ae29-472a-832c-2eb670f463c4
+  - apiVersion: v1
+    kind: ConfigMap
+    name: grafana-dashboard-kubevirt-top-consumers
+    namespace: openshift-config-managed
+    resourceVersion: "64650"
+    uid: 2a815283-e504-4d31-9da2-2a3081bc1858
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    name: rhel10-guest
+    namespace: openshift-virtualization-os-images
+    resourceVersion: "1499587"
+    uid: e1a21ea7-fba0-4ad8-a931-6abea6611243
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    name: rhel8-guest
+    namespace: openshift-virtualization-os-images
+    resourceVersion: "9734458"
+    uid: d3050405-868b-48b9-a31c-e53ece3f1bcd
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    name: rhel9-guest
+    namespace: openshift-virtualization-os-images
+    resourceVersion: "1499588"
+    uid: 3036f179-081b-4690-ba71-99411fc51f75
+  systemHealthStatus: healthy
+  versions:
+  - name: operator
+    version: 4.22.6
