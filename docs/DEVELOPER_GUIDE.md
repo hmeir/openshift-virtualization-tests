@@ -40,10 +40,22 @@ To contribute code to the project:
 - The repository is using [CodeRabbit](https://www.coderabbit.ai/) for PR reviews; all comments must be addressed in the PR.
 - Before a PR can be merged:
   - PRs must be verified and marked with "verified" label.
-    - PRs must be reviewed and approved (by adding `/lgtm` comment or using GitHubs' approve) by at least two reviewers other than the committer.
-      For the PR to be merged, the accepted reviewers are the ones that appear in the modified code's `OWNERS` file or root approvers.
-    - PRs must be approved (by adding `/approve` comment) by at least one of the approvers in the root `OWNERS` file.
-      If the `OWNERS` file relevant to the modified code contains `root-approvers: False`, the approvers in the root `OWNERS` file are not required to approve the PR.
+    - PRs must be reviewed with `/lgtm` (or a GitHub approval) by at least two
+      reviewers other than the author. Valid reviewers are the users listed under
+      `reviewers` in the OWNERS files that apply to the modified code (the
+      nearest OWNERS file and every OWNERS file in its parent directories), plus
+      the `reviewers` and `approvers` listed in the root `OWNERS` file.
+    - PRs must be approved with `/approve`. A root `OWNERS` approver can approve
+      any PR. When root approval is not required — every applicable OWNERS file
+      sets `root-approvers: False` — one approver from each applicable OWNERS
+      file must approve instead. Root approval is still required when a modified
+      file is not covered by a subdirectory OWNERS file (for example, a
+      top-level file).
+  - When root approval is not required, an approver of every applicable OWNERS
+    file (or a root approver or repository maintainer) can run `/merge`.
+    Otherwise `/merge` is refused and the PR is merged with the GitHub merge
+    button after a root approver approves. See the
+    [webhook command reference](https://github.com/myk-org/github-webhook-server/blob/main/docs/run-pull-request-commands.md#merge).
   - All CI checks must pass.
     - If `can-be-merged` check is marked as failed, check the job to see the reason(s).
 

@@ -93,12 +93,16 @@ Listed in the `approvers` section of a subdirectory OWNERS file (e.g., `tests/st
 The Repository Approver (or Root Approver) is the ultimate guardian of the project. This
 individual holds the final authority over the repository's long-term health, test framework
 consistency, and CI/CD infrastructure. Their primary duty is to prevent "test rot," flakiness,
-and infrastructure decay, ensuring quality and trustworthy code. This authority is explicitly
-defined in the project's root `OWNERS` file, superseding all other sub-directory owners.
+and infrastructure decay, ensuring quality and trustworthy code. This authority is defined in
+the project's root `OWNERS` file and applies to every change unless the applicable
+subdirectory OWNERS files opt out with `root-approvers: False`.
 
 - **Ultimate Approval and Veto:** Possesses the absolute right to `/approve` or `/hold` any
   change. This authority is used to enforce architectural standards, resolve disputes, or merge
   critical framework changes.
+- **Scoped approval:** Subdirectories can opt out of root approval with `root-approvers: False`
+  in their OWNERS file. When every applicable OWNERS file opts out, one approver from each of
+  those files provides the binding approval; otherwise a root approver is required.
 - **Final Escalation Point:** Acts as the "tie-breaker" in disputes between component owners.
 - **CI/CD Infrastructure Ownership:** Owns and manages the core CI/CD pipelines (e.g., GitHub
   Actions and checks). They are responsible for ensuring the test infrastructure itself is not
