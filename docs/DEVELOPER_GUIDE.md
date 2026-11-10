@@ -42,8 +42,10 @@ To contribute code to the project:
   - PRs must be verified and marked with "verified" label.
     - PRs must be reviewed and approved (by adding `/lgtm` comment or using GitHubs' approve) by at least two reviewers other than the committer.
       For the PR to be merged, the accepted reviewers are the ones that appear in the modified code's `OWNERS` file or root approvers.
-    - PRs must be approved (by adding `/approve` comment) by at least one of the approvers in the root `OWNERS` file.
-      If the `OWNERS` file relevant to the modified code contains `root-approvers: False`, the approvers in the root `OWNERS` file are not required to approve the PR.
+    - PRs must be approved (by adding `/approve` comment) by an approver of every `OWNERS` file matched by the modified code that lists approvers.
+      If a matched `OWNERS` file contains `root-approvers: False`, approval from that file's `approvers` is required instead of a root approver.
+      Root approvers may still approve, and an approval from any root approver satisfies the check.
+    - The `/merge` command is available only when the bot has `allow-merge-command` enabled, every matched `OWNERS` file sets `root-approvers: False`, and every changed folder has a matching `OWNERS` file.
   - All CI checks must pass.
     - If `can-be-merged` check is marked as failed, check the job to see the reason(s).
 
